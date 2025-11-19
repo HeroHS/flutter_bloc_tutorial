@@ -131,23 +131,97 @@ BlocListener<YourBloc, YourState>(
 )
 ```
 
-### 8. Combined Builder and Listener
+### 8. Combined Builder and Listener (BlocConsumer)
 
 ```dart
 BlocConsumer<YourBloc, YourState>(
+  // Optional: Control when listener fires
+  listenWhen: (previous, current) {
+    return current is ErrorState || current is SuccessState;
+  },
   listener: (context, state) {
-    // Side effects (e.g., show snackbar)
+    // Side effects: navigation, snackbars, dialogs
     if (state is ErrorState) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(state.message)),
       );
     }
+    if (state is SuccessState) {
+      Navigator.push(context, NextScreen());
+    }
+  },
+  // Optional: Control when builder rebuilds
+  buildWhen: (previous, current) {
+    return current is! ErrorState; // Don't rebuild for errors
   },
   builder: (context, state) {
     // UI based on state
     return switch (state) {
       LoadingState() => CircularProgressIndicator(),
       LoadedState() => YourDataWidget(state.data),
+      _ => Container(),
+    };
+  },
+)
+```
+
+### 8a. BlocConsumer with Dual State Emissions (Shopping Cart Pattern)
+
+```dart
+// In BLoC: Emit action state, then loaded state
+void _onAddToCart(AddToCartEvent event, Emitter emit) {
+  // Get current data
+  final (products, cartCount) = switch (state) {
+    LoadedState() => (state.products, state.cartCount),
+    AddedToCartState() => (state.products, state.cartCount),
+    _ => (<Product>[], 0),
+  };
+
+  // Update data
+  final updatedProducts = products.map((p) => 
+    p.id == event.id ? p.copyWith(inCart: true) : p
+  ).toList();
+
+  // Emit action state (triggers listener for snackbar)
+  emit(AddedToCartState(
+    products: updatedProducts,
+    cartCount: cartCount + 1,
+    itemName: event.name,
+  ));
+
+  // Then emit loaded state (ready for next action)
+  emit(LoadedState(
+    products: updatedProducts,
+    cartCount: cartCount + 1,
+  ));
+}
+
+// In UI: listenWhen catches the transition
+BlocConsumer<ProductBloc, ProductState>(
+  listenWhen: (previous, current) {
+    // Trigger on action states
+    return current is AddedToCartState ||
+        current is RemovedFromCartState;
+  },
+  listener: (context, state) {
+    // Clear existing snackbars
+    ScaffoldMessenger.of(context).clearSnackBars();
+    
+    if (state is AddedToCartState) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${state.itemName} added to cart!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      HapticFeedback.mediumImpact();
+    }
+  },
+  builder: (context, state) {
+    return switch (state) {
+      LoadingState() => CircularProgressIndicator(),
+      LoadedState() => ProductList(state.products),
+      AddedToCartState() => ProductList(state.products),
       _ => Container(),
     };
   },
@@ -429,6 +503,24 @@ class PostCubit extends Cubit<PostState> {
     }
   }
 
+  // Advanced: Refresh with optimistic update
+  Future<void> refreshPosts() async {
+    // Keep showing current data while refreshing
+    if (state is PostLoadedState) {
+      final currentPosts = (state as PostLoadedState).posts;
+      emit(PostRefreshingState(currentPosts));
+    } else {
+      emit(PostLoadingState());
+    }
+
+    try {
+      final posts = await service.refreshPosts();
+      emit(PostLoadedState(posts));
+    } catch (e) {
+      emit(PostErrorState(e.toString()));
+    }
+  }
+
   Future<void> retry() async {
     await loadPosts();
   }
@@ -468,4 +560,157 @@ blocTest<PostCubit, PostState>(
 | **Events** | Required | Not needed |
 | **Files** | 3 (bloc, events, states) | 2 (cubit, states) |
 | **Boilerplate** | More | ~40% less |
-| **Use Case** | Complex logic | Simple state changes |
+| **Use Case** | Complex logic, event tracking | Simple state changes |
+| **Example** | UserBloc, ProductBloc | PostCubit |
+| **State Access** | Switch on event types | Switch on state types |
+| **Dual Emissions** | Emit multiple states per event | Emit multiple states per method |
+
+---
+
+## 🎯 BlocConsumer Pattern (Product Demo)
+
+### When to Use BlocConsumer
+- Need both UI updates AND side effects
+- Show snackbars/dialogs while updating UI
+- Navigate based on state + update display
+- Trigger haptic feedback on actions
+
+### Pattern: Dual State Emission
+**Problem**: Listener only fires when state TYPE changes
+**Solution**: Emit action state → then emit base state
+
+```dart
+// State Flow
+LoadedState → AddToCartEvent → AddedToCartState → LoadedState
+                                 ↑ Listener fires!
+
+LoadedState → AddToCartEvent → AddedToCartState → LoadedState  
+                                 ↑ Fires again!
+```
+
+### Complete Example: Shopping Cart
+
+```dart
+// States
+sealed class ProductState {}
+final class ProductLoadedState extends ProductState {
+  final List<Product> products;
+  final int cartCount;
+  ProductLoadedState({required this.products, required this.cartCount});
+}
+
+final class ProductAddedToCartState extends ProductState {
+  final List<Product> products;
+  final int cartCount;
+  final String productName;
+  final DateTime timestamp; // Makes each instance unique
+  ProductAddedToCartState({
+    required this.products,
+    required this.cartCount,
+    required this.productName,
+  }) : timestamp = DateTime.now();
+}
+
+// BLoC Event Handler
+void _onAddToCart(AddToCartEvent event, Emitter emit) {
+  // Get current state data using switch expression
+  final (currentProducts, currentCartCount) = switch (state) {
+    ProductLoadedState() => (state.products, state.cartCount),
+    ProductAddedToCartState() => (state.products, state.cartCount),
+    ProductRemovedFromCartState() => (state.products, state.cartCount),
+    _ => (<Product>[], 0),
+  };
+
+  if (currentProducts.isNotEmpty) {
+    // Update products
+    final updatedProducts = currentProducts.map((product) {
+      if (product.id == event.productId) {
+        return product.copyWith(inCart: true);
+      }
+      return product;
+    }).toList();
+
+    // Emit action state (triggers listener)
+    emit(ProductAddedToCartState(
+      products: updatedProducts,
+      cartCount: currentCartCount + 1,
+      productName: event.productName,
+    ));
+
+    // Emit loaded state (ready for next action)
+    emit(ProductLoadedState(
+      products: updatedProducts,
+      cartCount: currentCartCount + 1,
+    ));
+  }
+}
+
+// UI with BlocConsumer
+BlocConsumer<ProductBloc, ProductState>(
+  listenWhen: (previous, current) {
+    // Trigger listener on action states
+    return current is ProductAddedToCartState ||
+        current is ProductRemovedFromCartState ||
+        current is ProductErrorState ||
+        current is ProductCheckoutState;
+  },
+  listener: (context, state) {
+    // Clear existing snackbars
+    ScaffoldMessenger.of(context).clearSnackBars();
+
+    if (state is ProductAddedToCartState) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${state.productName} added to cart!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      HapticFeedback.mediumImpact();
+    }
+
+    if (state is ProductRemovedFromCartState) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${state.productName} removed from cart'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+    }
+
+    if (state is ProductCheckoutState) {
+      showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: Text('Checkout'),
+          content: Text('Proceeding with ${state.itemCount} items'),
+        ),
+      );
+      HapticFeedback.heavyImpact();
+    }
+  },
+  builder: (context, state) {
+    return switch (state) {
+      ProductInitialState() => WelcomeScreen(),
+      ProductLoadingState() => LoadingIndicator(),
+      ProductLoadedState() => ProductList(state.products),
+      ProductAddedToCartState() => ProductList(state.products),
+      ProductRemovedFromCartState() => ProductList(state.products),
+      ProductErrorState() => ErrorView(state.message),
+      ProductRefreshingState() => Stack(
+          children: [
+            ProductList(state.products),
+            RefreshIndicator(),
+          ],
+        ),
+      _ => Container(),
+    };
+  },
+)
+```
+
+### Key Takeaways
+1. **listenWhen**: Controls when listener fires (optimization)
+2. **buildWhen**: Controls when builder rebuilds (optimization)
+3. **Dual Emission**: Action state → Base state pattern
+4. **Switch Expressions**: Clean state data extraction
+5. **clearSnackBars()**: Prevents queue issues

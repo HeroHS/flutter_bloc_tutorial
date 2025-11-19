@@ -132,6 +132,107 @@ This tutorial demonstrates **two state management patterns**: BLoC (Business Log
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
+## BlocConsumer Pattern Flow (Product Example)
+
+### The Complete Flow
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                         USER INTERFACE                               │
+│                    (product_list_screen.dart)                       │
+│    BlocConsumer: Builder (UI) + Listener (Side Effects)            │
+└─────────────────────────────────────────────────────────────────────┘
+                                    │
+                   User clicks "Add to Cart" button
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                        DISPATCH EVENT                                │
+│  context.read<ProductBloc>().add(AddToCartEvent(id, name))          │
+└─────────────────────────────────────────────────────────────────────┘
+                                    │
+                      Event reaches BLoC
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                        PRODUCT BLOC                                  │
+│                       (product_bloc.dart)                           │
+│                                                                      │
+│  Event Handler: _onAddToCart()                                      │
+│  1. Extract current data with switch expression                    │
+│  2. Update product list (mark as inCart)                           │
+│  3. emit(ProductAddedToCartState(...)) ← Triggers LISTENER        │
+│  4. emit(ProductLoadedState(...))      ← Updates BUILDER          │
+└─────────────────────────────────────────────────────────────────────┘
+                                    │
+               Dual state emissions flow
+                                    │
+          ┌───────────────────────────┴───────────────────────────┐
+          │                                                          │
+          ▼                                                          ▼
+┌──────────────────────────┐                      ┌──────────────────────────┐
+│      LISTENER           │                      │       BUILDER          │
+│  (Side Effects)        │                      │  (UI Updates)         │
+│                        │                      │                      │
+│ Show Snackbar:        │                      │ Switch on state:     │
+│ "Product added"       │                      │ - LoadedState        │
+│                        │                      │ - AddedToCartState   │
+│ Haptic Feedback       │                      │ - ErrorState         │
+│ (vibration)           │                      │                      │
+│                        │                      │ Rebuild product list │
+│ listenWhen:           │                      │ with updated cart    │
+│ - AddedToCartState    │                      │ badge                │
+│ - RemovedState        │                      │                      │
+│ - CheckoutState       │                      │                      │
+└──────────────────────────┘                      └──────────────────────────┘
+```
+
+### Dual State Emission Pattern
+
+**Why it's needed:**
+```
+Problem: Listener only fires on state TYPE changes
+
+LoadedState → add to cart → AddedToCartState ✓ Fires!
+AddedToCartState → add to cart → AddedToCartState ✗ Doesn't fire!
+
+Solution: Emit action state, then base state
+
+LoadedState → add → AddedToCartState → LoadedState ✓ Ready for next!
+LoadedState → add → AddedToCartState → LoadedState ✓ Fires again!
+```
+
+**Implementation:**
+```dart
+void _onAddToCart(event, emit) {
+  // 1. Get current data using switch expression
+  final (products, count) = switch (state) {
+    ProductLoadedState() => (state.products, state.cartItemCount),
+    ProductAddedToCartState() => (state.products, state.cartItemCount),
+    _ => (<Product>[], 0),
+  };
+
+  // 2. Update data
+  final updatedProducts = products.map((p) => 
+    p.id == event.id ? p.copyWith(inCart: true) : p
+  ).toList();
+
+  // 3. Emit action state (triggers listener)
+  emit(ProductAddedToCartState(
+    products: updatedProducts,
+    cartItemCount: count + 1,
+    productName: event.productName,
+    timestamp: DateTime.now(), // Makes each instance unique
+  ));
+
+  // 4. Emit base state (prepares for next action)
+  emit(ProductLoadedState(
+    products: updatedProducts,
+    cartItemCount: count + 1,
+  ));
+}
+```
+
 ---
 
 ## State Transitions
@@ -165,6 +266,38 @@ Advanced Refresh Flow:
 Loaded → Refreshing (keeps showing old data) → Loaded (new data)
    ↑           ↓ (on error)                            │
    └─────────── (restore old data) ────────────────────┘
+```
+
+### BlocConsumer Pattern (Product - Shopping Cart)
+```
+Basic Flow:
+Initial → Loading → Loaded
+
+Cart Actions Flow (Dual Emission Pattern):
+Loaded → AddEvent → AddedToCart → Loaded ← ready for next action
+                        │ Listener fires!
+                        └────► Snackbar shown
+                        └────► Haptic feedback
+
+Loaded → RemoveEvent → RemovedFromCart → Loaded
+                           │ Listener fires!
+                           └────► Snackbar shown
+
+Loaded → CheckoutEvent → CheckoutState → Loaded
+                            │ Listener fires!
+                            └────► Dialog shown
+                            └────► Navigation
+                            └────► Haptic feedback
+
+Refresh Flow:
+Loaded → RefreshEvent → Refreshing → Loaded
+                           │ Shows current data
+                           └────► + refresh indicator
+
+Error Flow:
+Loaded → ErrorEvent → Error
+                        │ Listener fires!
+                        └────► Error snackbar
 ```
 
 ---
@@ -244,12 +377,268 @@ BlocProvider(
 
 ---
 
+### BlocConsumer Pattern Components (Product Demo)
+
+#### 1. Events (product_event.dart)
+- **LoadProductsEvent**: Load products successfully
+- **LoadProductsWithErrorEvent**: Trigger error scenario
+- **AddToCartEvent**: Add product to cart (includes productId, productName)
+- **RemoveFromCartEvent**: Remove product from cart
+- **CheckoutEvent**: Initiate checkout flow
+- **RefreshProductsEvent**: Refresh product list
+- **ResetProductsEvent**: Reset to initial state
+
+#### 2. States (product_state.dart)
+- **ProductInitialState**: Starting state
+- **ProductLoadingState**: Products being fetched
+- **ProductLoadedState**: Products loaded (contains products, cartItemCount)
+- **ProductAddedToCartState**: Product added (contains products, cartItemCount, productName, timestamp)
+- **ProductRemovedFromCartState**: Product removed (contains products, cartItemCount, productName, timestamp)
+- **ProductErrorState**: Error occurred (contains errorMessage)
+- **ProductCheckoutState**: Checkout initiated (contains itemCount)
+- **ProductRefreshingState**: Refreshing while showing current products
+
+**Note**: Action states (Added, Removed, Checkout) include timestamps to ensure each instance is unique, allowing repeated listener firing.
+
+#### 3. BLoC (product_bloc.dart)
+- Uses **switch expressions** with record patterns for clean state extraction
+- Implements **dual state emission** pattern:
+  - Emits action state (triggers listener)
+  - Then emits loaded state (prepares for next action)
+- Handles 7 different event types
+- Manages shopping cart logic
+
+**Switch Expression Pattern**:
+```dart
+final (currentProducts, currentCartCount) = switch (state) {
+  ProductLoadedState() => (state.products, state.cartItemCount),
+  ProductAddedToCartState() => (state.products, state.cartItemCount),
+  ProductRemovedFromCartState() => (state.products, state.cartItemCount),
+  _ => (<Product>[], 0),
+};
+```
+
+#### 4. BlocConsumer (product_list_screen.dart)
+- **Listener**: Handles side effects
+  - Snackbars for add/remove actions
+  - Navigation on checkout
+  - Haptic feedback for user actions
+  - Uses `clearSnackBars()` to prevent queue issues
+- **Builder**: Handles UI rendering
+  - Product list with cart badges
+  - Loading states
+  - Error states with retry
+- **listenWhen**: Optimizes when listener fires
+  ```dart
+  listenWhen: (previous, current) {
+    return current is ProductAddedToCartState ||
+        current is ProductRemovedFromCartState ||
+        current is ProductErrorState ||
+        current is ProductCheckoutState;
+  }
+  ```
+
+#### 5. BlocProvider (home_screen.dart → product_list_screen.dart)
+```dart
+BlocProvider(
+  create: (_) => ProductBloc(productApiService: ProductApiService())
+    ..add(LoadProductsEvent()),
+  child: ProductListScreen(),
+)
+```
+
+---
+
 ## Data Flow Examples
 
 ### BLoC: When User Taps "Load Users" Button
 
 1. **UI**: Button tap triggers event dispatch
    ```dart
+   context.read<UserBloc>().add(LoadUsersEvent());
+   ```
+
+2. **Event Stream**: Event enters BLoC's event stream
+
+3. **Event Handler**: `_onLoadUsers` is called
+   ```dart
+   Future<void> _onLoadUsers(LoadUsersEvent event, Emitter<UserState> emit) async {
+     emit(UserLoadingState());
+     final users = await userApiService.fetchUsers();
+     emit(UserLoadedState(users));
+   }
+   ```
+
+4. **State Stream**: New states flow to UI
+   - First: `UserLoadingState` (UI shows spinner)
+   - Then: `UserLoadedState(users)` (UI shows list)
+
+5. **BlocBuilder Reacts**: Widget rebuilds for each state
+
+---
+
+### Cubit: When User Taps "Load Posts" Button
+
+1. **UI**: Button tap calls method directly
+   ```dart
+   context.read<PostCubit>().loadPosts();
+   ```
+
+2. **Method Executes**: No event handling needed
+   ```dart
+   Future<void> loadPosts() async {
+     emit(PostLoadingState());
+     final posts = await postApiService.fetchPosts();
+     emit(PostLoadedState(posts));
+   }
+   ```
+
+3. **State Stream**: New states flow to UI
+   - First: `PostLoadingState`
+   - Then: `PostLoadedState(posts)`
+
+4. **BlocBuilder Reacts**: Same as BLoC pattern!
+
+---
+
+### BlocConsumer: When User Adds Product to Cart
+
+1. **UI**: User taps "Add to Cart" icon button
+   ```dart
+   IconButton(
+     icon: Icon(product.inCart ? Icons.check_circle : Icons.add_shopping_cart),
+     onPressed: () {
+       context.read<ProductBloc>().add(
+         AddToCartEvent(
+           productId: product.id,
+           productName: product.name,
+         ),
+       );
+     },
+   )
+   ```
+
+2. **Event Handler**: `_onAddToCart` processes event
+   ```dart
+   void _onAddToCart(AddToCartEvent event, Emitter<ProductState> emit) {
+     // Extract current data using switch expression
+     final (currentProducts, currentCartCount) = switch (state) {
+       ProductLoadedState() => (state.products, state.cartItemCount),
+       ProductAddedToCartState() => (state.products, state.cartItemCount),
+       ProductRemovedFromCartState() => (state.products, state.cartItemCount),
+       _ => (<Product>[], 0),
+     };
+
+     if (currentProducts.isNotEmpty) {
+       // Update products
+       final updatedProducts = currentProducts.map((product) {
+         if (product.id == event.productId) {
+           return product.copyWith(inCart: true);
+         }
+         return product;
+       }).toList();
+
+       // DUAL EMISSION PATTERN
+       // 1. Emit action state (triggers listener)
+       emit(ProductAddedToCartState(
+         products: updatedProducts,
+         cartItemCount: currentCartCount + 1,
+         productName: event.productName,
+         timestamp: DateTime.now(),
+       ));
+
+       // 2. Emit loaded state (updates builder, ready for next)
+       emit(ProductLoadedState(
+         products: updatedProducts,
+         cartItemCount: currentCartCount + 1,
+       ));
+     }
+   }
+   ```
+
+3. **BlocConsumer Listener Fires**: Side effects execute
+   ```dart
+   listener: (context, state) {
+     ScaffoldMessenger.of(context).clearSnackBars();
+     
+     if (state is ProductAddedToCartState) {
+       // Show snackbar
+       ScaffoldMessenger.of(context).showSnackBar(
+         SnackBar(
+           content: Text('${state.productName} added to cart!'),
+           backgroundColor: Colors.green,
+         ),
+       );
+       // Haptic feedback
+       HapticFeedback.mediumImpact();
+     }
+   }
+   ```
+
+4. **BlocConsumer Builder Updates**: UI rebuilds
+   ```dart
+   builder: (context, state) {
+     return switch (state) {
+       ProductLoadedState() => _buildProductsList(
+         state.products,
+         state.cartItemCount,
+       ),
+       ProductAddedToCartState() => _buildProductsList(
+         state.products,
+         state.cartItemCount,
+       ),
+       // ... other states
+     };
+   }
+   ```
+
+5. **Result**: 
+   - Cart badge updates (builder)
+   - Green snackbar appears (listener)
+   - Phone vibrates (listener)
+   - Product icon changes to checkmark (builder)
+   - State resets to `ProductLoadedState` (ready for next add)
+
+---
+
+## Why Dual Emission Pattern?
+
+**Problem**: BlocConsumer listener only fires when state **type** changes.
+
+```dart
+// Scenario without dual emission:
+ProductAddedToCartState  (first add - listener fires ✓)
+  ↓
+ProductAddedToCartState  (second add - listener doesn't fire ✗)
+  ↓
+ProductAddedToCartState  (third add - listener doesn't fire ✗)
+```
+
+**Solution**: Emit action state, then base state.
+
+```dart
+// With dual emission:
+ProductLoadedState
+  ↓ add to cart
+ProductAddedToCartState  (listener fires - show snackbar ✓)
+  ↓ immediate
+ProductLoadedState       (ready for next action)
+  ↓ add to cart again
+ProductAddedToCartState  (listener fires again - show snackbar ✓)
+  ↓ immediate
+ProductLoadedState       (ready for next action)
+```
+
+**Key Points**:
+1. Always transitions between different state types
+2. Listener fires every time
+3. Builder handles both state types (shows same UI)
+4. `listenWhen` optimizes by filtering which states trigger listener
+5. `clearSnackBars()` prevents snackbar queue buildup
+
+---
+
+## Component Interaction Summary
    context.read<UserBloc>().add(LoadUsersEvent())
    ```
 

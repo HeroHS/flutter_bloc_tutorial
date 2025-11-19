@@ -6,6 +6,7 @@ import '../services/post_api_service.dart';
 import '../services/user_api_service.dart';
 import 'post_list_screen.dart';
 import 'user_list_screen.dart';
+import 'product_list_screen.dart';
 
 /// Home screen that allows choosing between BLoC and Cubit examples
 class HomeScreen extends StatelessWidget {
@@ -61,11 +62,41 @@ class HomeScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 24),
 
-                        // BLoC Tutorial Card
+                        // Cubit Tutorial Card (SIMPLEST - START HERE)
                         _buildTutorialCard(
                           context: context,
-                          title: 'BLoC Pattern',
-                          subtitle: 'Event-driven architecture',
+                          title: 'Cubit Pattern ⭐',
+                          subtitle: 'Simplified state management • Start here!',
+                          icon: Icons.widgets,
+                          color: Colors.green,
+                          features: [
+                            '✓ Direct method calls',
+                            '✓ No events needed',
+                            '✓ 40% less boilerplate',
+                            '✓ Perfect for beginners',
+                          ],
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => BlocProvider(
+                                  create: (_) => PostCubit(
+                                    postApiService: PostApiService(),
+                                  ),
+                                  child: const PostListScreen(),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        // BLoC Tutorial Card (INTERMEDIATE)
+                        _buildTutorialCard(
+                          context: context,
+                          title: 'BLoC Pattern ⭐⭐',
+                          subtitle: 'Event-driven architecture • Intermediate',
                           icon: Icons.account_tree,
                           color: Colors.blue,
                           features: [
@@ -91,29 +122,24 @@ class HomeScreen extends StatelessWidget {
 
                         const SizedBox(height: 16),
 
-                        // Cubit Tutorial Card
+                        // BlocConsumer Tutorial Card (ADVANCED)
                         _buildTutorialCard(
                           context: context,
-                          title: 'Cubit Pattern',
-                          subtitle: 'Simplified state management',
-                          icon: Icons.widgets,
-                          color: Colors.purple,
+                          title: 'BlocConsumer Demo ⭐⭐⭐',
+                          subtitle: 'Builder + Listener combined • Advanced',
+                          icon: Icons.merge_type,
+                          color: Colors.deepPurple,
                           features: [
-                            '✓ Direct method calls',
-                            '✓ No events needed',
-                            '✓ Less boilerplate',
-                            '✓ Simple & elegant',
+                            '✓ UI updates (builder)',
+                            '✓ Side effects (listener)',
+                            '✓ Shopping cart example',
+                            '✓ Professional UX patterns',
                           ],
                           onTap: () {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) => BlocProvider(
-                                  create: (_) => PostCubit(
-                                    postApiService: PostApiService(),
-                                  ),
-                                  child: const PostListScreen(),
-                                ),
+                                builder: (_) => const ProductListScreen(),
                               ),
                             );
                           },
@@ -140,7 +166,7 @@ class HomeScreen extends StatelessWidget {
                                   ),
                                   const SizedBox(width: 8),
                                   Text(
-                                    'Quick Comparison',
+                                    'Learning Path (Easy → Advanced)',
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       color: Colors.amber.shade900,
@@ -151,8 +177,9 @@ class HomeScreen extends StatelessWidget {
                               ),
                               const SizedBox(height: 8),
                               const Text(
-                                'BLoC: Use when you need events, complex logic, or event tracking\n'
-                                'Cubit: Use for simpler cases with direct method calls',
+                                '1️⃣ Cubit: Start here! Simple, direct method calls\n'
+                                '2️⃣ BLoC: Add event-driven architecture\n'
+                                '3️⃣ BlocConsumer: Master side effects & rich UX',
                                 style: TextStyle(fontSize: 12),
                                 textAlign: TextAlign.center,
                               ),

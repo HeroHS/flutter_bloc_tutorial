@@ -395,6 +395,41 @@ Future<void> loadPosts() async {
 }
 ```
 
+### 5. **Use Switch Expressions for State Handling**
+```dart
+// Modern Dart pattern - clean and exhaustive
+return switch (state) {
+  PostInitialState() => WelcomeView(),
+  PostLoadingState() => LoadingIndicator(),
+  PostLoadedState() => PostList(state.posts),
+  PostRefreshingState() => Stack(
+      children: [
+        PostList(state.currentPosts),
+        RefreshIndicator(),
+      ],
+    ),
+  PostErrorState() => ErrorView(state.message),
+};
+```
+
+### 6. **Consider BlocConsumer for Side Effects**
+```dart
+// When you need BOTH UI updates AND side effects (snackbars, navigation)
+// Consider using BLoC with BlocConsumer instead of Cubit
+BlocConsumer<ProductBloc, ProductState>(
+  listener: (context, state) {
+    if (state is ProductAddedToCartState) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Added to cart!')),
+      );
+    }
+  },
+  builder: (context, state) {
+    return ProductList(state.products);
+  },
+)
+```
+
 ## 📚 Summary
 
 **Cubit** simplifies state management by removing the event layer:
@@ -405,18 +440,26 @@ Future<void> loadPosts() async {
 - **Still Reactive**: UI automatically updates on state changes
 - **Easy Testing**: Just call methods and verify states
 - **Great for Learning**: Simpler mental model
+- **Use Switch Expressions**: Modern Dart 3+ patterns for clean code
 
-**Try the tutorial app to see both BLoC and Cubit in action!**
+**When to Choose**:
+- **Cubit**: Simple CRUD, prototyping, direct state changes
+- **BLoC**: Complex logic, event tracking, multiple events → same state
+- **BlocConsumer**: Shopping carts, forms, features with side effects
+
+**Try the tutorial app to see all three patterns in action!**
 
 ---
 
 ## 🚀 Quick Start
 
-Run the app and tap "Cubit Pattern" to see:
-- Direct method calls (no events)
-- Loading states with spinner
-- Success state with post list
-- Error handling with retry
-- Refresh functionality
+Run the app and explore all three demos:
 
-Compare with the "BLoC Pattern" to understand the differences!
+1. **"BLoC Pattern"** (Users): Event-driven with explicit events
+2. **"Cubit Pattern"** (Posts): Direct method calls, no events, optimistic refresh
+3. **"BlocConsumer Demo"** (Products): Shopping cart with snackbars, navigation, haptics
+
+Compare the code to understand:
+- BLoC: More boilerplate, event tracking
+- Cubit: Less code, simpler flow
+- BlocConsumer: Best UX with side effects
