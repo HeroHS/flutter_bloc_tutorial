@@ -285,3 +285,116 @@ Once you've mastered these exercises:
 - Keep the architecture diagram handy for reference
 
 Happy coding! 🚀
+
+---
+
+##  Cubit Pattern Exercises
+
+### Exercise C1: Add a Clear Button (Easy - Cubit)
+
+**Goal**: Add a clear button to the Post List screen.
+
+**Steps**:
+1. Open lib/screens/post_list_screen.dart
+2. Add a clear icon button to the AppBar actions
+3. When clicked, call context.read<PostCubit>().clear()
+4. Test that it resets to initial state
+
+**Learning Objective**: Practice calling Cubit methods directly
+
+---
+
+### Exercise C2: Add Post Count Display (Easy - Cubit)
+
+**Goal**: Show the total number of posts in the loaded state.
+
+**Steps**:
+1. Modify the success banner in _buildLoadedView
+2. Display "Successfully loaded X posts" with actual count
+3. Make it visually distinct
+
+**Learning Objective**: Access state data in Cubit UI
+
+---
+
+### Exercise C3: Implement Search in Cubit (Medium)
+
+**Goal**: Add search functionality using Cubit (no events!).
+
+**Steps**:
+1. Add a searchPosts(String query) method to PostCubit
+2. Filter posts based on title or body
+3. Add a search TextField in the UI
+4. Call the search method as user types
+
+**Compare** with Exercise 5 (BLoC search) to see the difference!
+
+**Learning Objective**: Implement features with direct method calls
+
+---
+
+### Exercise C4: Add Favorites (Medium - Both Patterns)
+
+**Goal**: Implement favorites in BOTH BLoC and Cubit to compare.
+
+**BLoC Implementation**:
+1. Create FavoritesBloc with AddFavorite and RemoveFavorite events
+2. Add event handlers
+3. Use BlocBuilder to show favorites
+
+**Cubit Implementation**:
+1. Create FavoritesCubit with addFavorite() and removeFavorite() methods
+2. Call methods directly from UI
+3. Use BlocBuilder (same as BLoC!)
+
+**Learning Objective**: Compare code complexity between patterns
+
+---
+
+### Exercise C5: Convert BLoC to Cubit (Hard)
+
+**Goal**: Convert the User/BLoC example to use Cubit pattern.
+
+**Steps**:
+1. Create UserCubit (copy from UserBloc)
+2. Remove all events
+3. Convert event handlers to public methods
+4. Update UI to call methods instead of dispatching events
+5. Compare line count: BLoC vs Cubit
+
+**Learning Objective**: Understand the structural differences
+
+---
+
+### Exercise C6: Add Pagination with Cubit (Hard)
+
+**Goal**: Implement pagination using Cubit's direct method approach.
+
+**Steps**:
+1. Add loadMore() method to PostCubit
+2. Track current page number
+3. Create LoadingMoreState
+4. Detect scroll to bottom
+5. Load and append more posts
+
+**Learning Objective**: Advanced state management with Cubit
+
+---
+
+##  Pattern Comparison Challenges
+
+### Challenge PC1: Same Feature, Both Patterns
+Implement the same feature (e.g., filtering) in both BLoC and Cubit:
+- Measure lines of code
+- Compare complexity
+- Note developer experience differences
+
+### Challenge PC2: When Would You Choose Each?
+For each scenario, decide BLoC or Cubit and explain why:
+1. Simple todo list app
+2. E-commerce app with complex checkout flow
+3. News reader with categories and filters
+4. Social media app with real-time updates
+5. Weather app with location services
+
+---

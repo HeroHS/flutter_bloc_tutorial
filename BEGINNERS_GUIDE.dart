@@ -414,3 +414,228 @@
  * Keep practicing and building!
  * ============================================================================
  */
+
+/*
+ * ============================================================================
+ * CUBIT PATTERN EXPLANATION
+ * ============================================================================
+ */
+
+/*
+ * ----------------------------------------------------------------------------
+ * KEY DIFFERENCE: Cubit vs BLoC
+ * ----------------------------------------------------------------------------
+ * 
+ * BLoC Pattern (User example):
+ * UI  Dispatch Event  BLoC receives event  Processes  Emits State  UI rebuilds
+ * 
+ * Cubit Pattern (Post example):
+ * UI  Call Method  Cubit processes  Emits State  UI rebuilds
+ * 
+ * NO EVENTS IN CUBIT! You call methods directly!
+ */
+
+/*
+ * ----------------------------------------------------------------------------
+ * CUBIT STEP 1: Understanding PostCubit (lib/cubit/post_cubit.dart)
+ * ----------------------------------------------------------------------------
+ * 
+ * Cubit is simpler than BLoC:
+ * - No events file needed
+ * - No event handlers to register
+ * - Just public methods that emit states
+ * 
+ * Example methods in PostCubit:
+ * - loadPosts() - Load posts from API
+ * - loadPostsWithError() - Simulate error
+ * - retry() - Retry after error
+ * - refreshPosts() - Advanced refresh pattern
+ * - clear() - Reset to initial
+ * 
+ * Key Point: These are just regular async methods!
+ */
+
+/*
+ * ----------------------------------------------------------------------------
+ * CUBIT STEP 2: No Events Needed!
+ * ----------------------------------------------------------------------------
+ * 
+ * In BLoC, you have user_event.dart with:
+ * - LoadUsersEvent
+ * - LoadUsersWithErrorEvent
+ * - RetryLoadUsersEvent
+ * 
+ * In Cubit, you have... NOTHING! No events file!
+ * 
+ * Why? Because you call methods directly:
+ * 
+ * BLoC way:
+ * context.read<UserBloc>().add(LoadUsersEvent());
+ * 
+ * Cubit way:
+ * context.read<PostCubit>().loadPosts();
+ * 
+ * Cubit is more like normal OOP - just call the method!
+ */
+
+/*
+ * ----------------------------------------------------------------------------
+ * CUBIT STEP 3: Same States Pattern
+ * ----------------------------------------------------------------------------
+ * 
+ * States work the same way in Cubit!
+ * 
+ * PostState (sealed class):
+ * - PostInitialState: Starting state
+ * - PostLoadingState: Loading data
+ * - PostLoadedState: Data loaded (has posts list)
+ * - PostRefreshingState: Refreshing while showing old data (ADVANCED!)
+ * - PostErrorState: Error occurred (has error message)
+ * 
+ * The difference: In Cubit, methods emit these states directly
+ * In BLoC, event handlers emit these states
+ */
+
+/*
+ * ----------------------------------------------------------------------------
+ * CUBIT EXAMPLE: Loading Posts
+ * ----------------------------------------------------------------------------
+ * 
+ * 1. USER ACTION
+ *    User taps "Load Posts" button
+ * 
+ * 2. UI CALLS METHOD DIRECTLY
+ *    onPressed: () {
+ *      context.read<PostCubit>().loadPosts();
+ *    }
+ * 
+ * 3. CUBIT METHOD RUNS
+ *    Future<void> loadPosts() async {
+ *      emit(PostLoadingState());  // Show loading
+ *      ...
+ *    }
+ * 
+ * 4. UI REBUILDS (BlocBuilder)
+ *    Shows CircularProgressIndicator
+ * 
+ * 5. API CALL
+ *    final posts = await postApiService.fetchPosts();
+ *    (waits 2 seconds)
+ * 
+ * 6. CUBIT EMITS SUCCESS
+ *    emit(PostLoadedState(posts));
+ * 
+ * 7. UI REBUILDS AGAIN
+ *    Shows ListView with posts
+ * 
+ * DONE! 
+ * 
+ * Notice: No events, just method calls!
+ */
+
+/*
+ * ----------------------------------------------------------------------------
+ * ADVANCED: Optimistic Refresh Pattern
+ * ----------------------------------------------------------------------------
+ * 
+ * PostCubit has a special refreshPosts() method that demonstrates
+ * an advanced pattern:
+ * 
+ * Normal Refresh:
+ * Loaded  Loading (blank screen!)  Loaded
+ * 
+ * Optimistic Refresh (Better UX):
+ * Loaded  Refreshing (keep showing old data!)  Loaded (new data)
+ * 
+ * How it works:
+ * 
+ * 1. User pulls to refresh
+ * 2. Check if we have data:
+ *    if (state is PostLoadedState) {
+ *      emit(PostRefreshingState(currentPosts)); // Keep showing!
+ *    }
+ * 3. Call API for new data
+ * 4. On success: emit(PostLoadedState(newPosts))
+ * 5. On error: emit(PostLoadedState(oldPosts)) // Restore!
+ * 
+ * This is why Cubit has PostRefreshingState!
+ */
+
+/*
+ * ----------------------------------------------------------------------------
+ * WHEN TO USE BLoC VS CUBIT?
+ * ----------------------------------------------------------------------------
+ * 
+ * Use BLoC (User example) when:
+ *  You need event tracking/logging
+ *  Multiple events can trigger same state
+ *  Complex business logic
+ *  Event transformations (debounce, throttle)
+ *  Large team prefers strict architecture
+ * 
+ * Use Cubit (Post example) when:
+ *  Simple state management
+ *  Straightforward operations
+ *  Want less boilerplate (~40% less code!)
+ *  Direct method calls feel natural
+ *  Prototyping or MVP
+ * 
+ * Both are good! Choose based on your needs.
+ */
+
+/*
+ * ----------------------------------------------------------------------------
+ * COMPARING BLOC AND CUBIT SIDE BY SIDE
+ * ----------------------------------------------------------------------------
+ * 
+ * Same Feature: Loading Data
+ * 
+ * === BLOC WAY (User) ===
+ * 
+ * Files needed:
+ * 1. user_event.dart (define events)
+ * 2. user_state.dart (define states)
+ * 3. user_bloc.dart (event handlers)
+ * 
+ * Steps:
+ * 1. Create event: final class LoadUsersEvent extends UserEvent {}
+ * 2. Dispatch: context.read<UserBloc>().add(LoadUsersEvent())
+ * 3. Register: on<LoadUsersEvent>(_onLoadUsers)
+ * 4. Handle: Future<void> _onLoadUsers(...) { emit(...) }
+ * 
+ * === CUBIT WAY (Post) ===
+ * 
+ * Files needed:
+ * 1. post_state.dart (define states)
+ * 2. post_cubit.dart (methods)
+ * 
+ * Steps:
+ * 1. No event needed!
+ * 2. Call method: context.read<PostCubit>().loadPosts()
+ * 3. No registration needed!
+ * 4. Method: Future<void> loadPosts() { emit(...) }
+ * 
+ * Result: Cubit needs 1 less file and fewer steps!
+ */
+
+/*
+ * ============================================================================
+ * TRY BOTH PATTERNS IN THE APP!
+ * ============================================================================
+ * 
+ * This app lets you try both:
+ * 
+ * Home Screen  Choose:
+ * - BLoC Pattern (Blue) - Event-driven with User list
+ * - Cubit Pattern (Purple) - Direct methods with Post list
+ * 
+ * Compare them yourself:
+ * - Which feels more natural to you?
+ * - Which is easier to understand?
+ * - Which has less code?
+ * - Which fits your project better?
+ * 
+ * There''s no wrong choice - both are excellent!
+ * ============================================================================
+ */
+

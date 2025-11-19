@@ -92,7 +92,7 @@ class UserListScreen extends StatelessWidget {
 
   /// Initial view - shown when app first loads
   Widget _buildInitialView(BuildContext context) {
-    return Center(
+    return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(

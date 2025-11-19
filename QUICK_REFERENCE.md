@@ -404,3 +404,68 @@ void main() {
 - [BLoC Architecture Guidelines](https://bloclibrary.dev/architecture)
 - [Testing BLoCs](https://bloclibrary.dev/testing)
 - [VS Code BLoC Extension](https://marketplace.visualstudio.com/items?itemName=FelixAngelov.bloc)
+
+---
+
+##  Cubit Pattern Quick Reference
+
+### 1. Creating a Cubit (No Events Needed!)
+
+```dart
+// In post_cubit.dart
+class PostCubit extends Cubit<PostState> {
+  final PostApiService service;
+
+  PostCubit({required this.service}) : super(PostInitialState());
+
+  // Direct method calls - no events!
+  Future<void> loadPosts() async {
+    emit(PostLoadingState());
+    try {
+      final posts = await service.fetchPosts();
+      emit(PostLoadedState(posts));
+    } catch (e) {
+      emit(PostErrorState(e.toString()));
+    }
+  }
+
+  Future<void> retry() async {
+    await loadPosts();
+  }
+
+  void clear() {
+    emit(PostInitialState());
+  }
+}
+```
+
+### 2. Calling Cubit Methods from UI
+
+```dart
+// No events! Just call methods directly
+ElevatedButton(
+  onPressed: () => context.read<PostCubit>().loadPosts(),
+  child: Text('Load Posts'),
+)
+```
+
+### 3. Testing Cubit
+
+```dart
+blocTest<PostCubit, PostState>(
+  'emits [loading, loaded] when loadPosts succeeds',
+  build: () => cubit,
+  act: (cubit) => cubit.loadPosts(), // Direct method call!
+  expect: () => [isA<PostLoadingState>(), isA<PostLoadedState>()],
+);
+```
+
+##  BLoC vs Cubit Comparison
+
+| Feature | BLoC | Cubit |
+|---------|------|-------|
+| **Trigger** | bloc.add(Event()) | cubit.method() |
+| **Events** | Required | Not needed |
+| **Files** | 3 (bloc, events, states) | 2 (cubit, states) |
+| **Boilerplate** | More | ~40% less |
+| **Use Case** | Complex logic | Simple state changes |
