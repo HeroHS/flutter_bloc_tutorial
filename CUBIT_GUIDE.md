@@ -2,7 +2,19 @@
 
 ## 🎯 What is Cubit?
 
-**Cubit** is a lightweight subset of BLoC that allows you to manage state without events. It's simpler, has less boilerplate, and is perfect for straightforward state management scenarios.
+**Cubit** is a lightweight subset of BLoC that allows you to manage state without events. It's simpler, has less boilerplate, and is perfect for straightforward state management scenarios. **Works seamlessly with Clean Architecture** - still uses use cases instead of calling repositories or data sources directly!
+
+## 🏛️ Clean Architecture with Cubit
+
+```
+PostCubit (Presentation) → GetPosts (Domain Use Case) → PostRepository Interface (Domain)
+                                                                ↑
+                                                    PostRepositoryImpl (Data)
+                                                                ↑
+                                                    PostRemoteDataSource (Data)
+```
+
+**Key Point**: Cubit calls **use cases**, not services directly!
 
 ## 🔑 Key Differences: Cubit vs BLoC
 
@@ -28,9 +40,10 @@ context.read<UserBloc>().add(LoadUsersEvent());
 // 3. Handle Event in BLoC
 on<LoadUsersEvent>(_onLoadUsers);
 
-Future<void> _onLoadUsers(LoadUsersEvent event, Emitter emit) async {
+Future<void> _onLoadUsers(LoadUsersEvent event, Emitter<UserState> emit) async {
   emit(UserLoadingState());
-  final users = await api.fetchUsers();
+  // Calls use case (Clean Architecture)
+  final users = await getUsersUseCase(NoParams());
   emit(UserLoadedState(users));
 }
 ```
@@ -45,29 +58,42 @@ context.read<PostCubit>().loadPosts();
 // 3. Method in Cubit
 Future<void> loadPosts() async {
   emit(PostLoadingState());
-  final posts = await api.fetchPosts();
+  // Calls use case (Clean Architecture)
+  final posts = await getPostsUseCase(NoParams());
   emit(PostLoadedState(posts));
 }
 ```
 
 **Result: 40% less code with Cubit!**
 
-## 🏗️ Project Structure (Cubit Example)
+## 🏗️ Project Structure (Cubit Example with Clean Architecture)
 
 ```
-lib/
-├── cubit/                      # Cubit layer
-│   ├── post_cubit.dart        # Cubit implementation
-│   └── post_state.dart        # State definitions
-├── models/
-│   └── post.dart              # Post data model
-├── services/
-│   └── post_api_service.dart  # API service
-└── screens/
-    └── post_list_screen.dart  # UI with Cubit
+lib/features/post/
+├── domain/                         # Business logic layer
+│   ├── entities/
+│   │   └── post.dart              # Pure domain entity
+│   ├── repositories/
+│   │   └── post_repository.dart   # Repository interface
+│   └── usecases/
+│       ├── get_posts.dart         # Use case: Get posts
+│       └── get_posts_with_error.dart # Use case: Trigger error
+├── data/                           # Data access layer
+│   ├── datasources/
+│   │   └── post_remote_datasource.dart # API service
+│   ├── models/
+│   │   └── post_model.dart        # DTO with JSON
+│   └── repositories/
+│       └── post_repository_impl.dart # Repository implementation
+└── presentation/                   # UI layer
+    ├── cubit/
+    │   ├── post_cubit.dart        # Cubit implementation
+    │   └── post_state.dart        # State definitions
+    └── screens/
+        └── post_list_screen.dart  # UI with Cubit
 ```
 
-**Notice:** No `post_event.dart` file needed!
+**Notice:** No `post_event.dart` file needed! But still has full Clean Architecture!
 
 ## 📖 Complete Flow Example
 
@@ -131,26 +157,26 @@ final class ProductErrorState extends ProductState {
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class ProductCubit extends Cubit<ProductState> {
-  final ProductService service;
+  final GetProducts getProductsUseCase; // Use case, not service!
 
-  ProductCubit({required this.service}) : super(ProductInitialState());
+  ProductCubit({required this.getProductsUseCase}) : super(ProductInitialState());
 
   // Method 1: Load products
   Future<void> loadProducts() async {
     emit(ProductLoadingState());
     try {
-      final products = await service.fetchProducts();
+      final products = await getProductsUseCase(NoParams()); // Call use case
       emit(ProductLoadedState(products));
     } catch (e) {
       emit(ProductErrorState(e.toString()));
     }
   }
 
-  // Method 2: Search products
+  // Method 2: Search products (if you had a SearchProducts use case)
   Future<void> searchProducts(String query) async {
     emit(ProductLoadingState());
     try {
-      final products = await service.search(query);
+      final products = await searchProductsUseCase(SearchParams(query));
       emit(ProductLoadedState(products));
     } catch (e) {
       emit(ProductErrorState(e.toString()));
@@ -169,7 +195,19 @@ class ProductCubit extends Cubit<ProductState> {
 ```dart
 // In your app
 BlocProvider(
-  create: (context) => ProductCubit(service: ProductService()),
+  create: (context) => ProductCubit(
+    getProductsUseCase: GetProducts(
+      ProductRepositoryImpl(
+        remoteDataSource: ProductRemoteDataSource(),
+      ),
+    ),
+  ),
+  child: ProductScreen(),
+)
+
+// Or with dependency injection (recommended)
+BlocProvider(
+  create: (context) => getIt<ProductCubit>(),
   child: ProductScreen(),
 )
 ```

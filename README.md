@@ -1,55 +1,178 @@
-# Flutter BLoC Tutorial - Three State Management Patterns
+# Flutter BLoC Tutorial - Clean Architecture + Three State Management Patterns
 
-A comprehensive tutorial application demonstrating **three state management patterns**: BLoC (event-driven), Cubit (method-driven), and BlocConsumer (builder + listener) using `flutter_bloc` to manage state when loading data from an API.
+A comprehensive tutorial application demonstrating **Clean Architecture** with **three state management patterns**: BLoC (event-driven), Cubit (method-driven), and BlocConsumer (builder + listener) using `flutter_bloc` to manage state when loading data from an API.
 
 ## 📚 What You'll Learn
 
 This tutorial demonstrates:
+- ✅ **Clean Architecture**: Separation of concerns with Domain, Data, and Presentation layers
 - ✅ **BLoC Pattern**: Event-driven architecture with events and states (User demo)
 - ✅ **Cubit Pattern**: Simplified approach with direct method calls - no events (Post demo)
 - ✅ **BlocConsumer Pattern**: Combined builder and listener for side effects (Product demo)
+- ✅ **Use Cases**: Business logic isolation from presentation and data layers
+- ✅ **Repository Pattern**: Abstract data access with concrete implementations
+- ✅ **Entities vs Models**: Pure domain objects vs data transfer objects
 - ✅ Managing different UI states (Initial, Loading, Success, Error, Refreshing)
-- ✅ Dual state emission pattern for repeated actions
+- ✅ Dual state emission pattern for repeated actions (BlocConsumer)
 - ✅ Side effects: Snackbars, navigation, haptic feedback
 - ✅ Simulating API calls with `Future.delayed`
-- ✅ Handling errors gracefully with retry logic
+- ✅ Handling errors gracefully with retry logic and Failure classes
 - ✅ Using `BlocProvider`, `BlocBuilder`, `BlocListener`, and `BlocConsumer`
 - ✅ Modern Dart 3+ features: sealed classes, switch expressions, record patterns
 - ✅ **When to use BLoC vs Cubit vs BlocConsumer** for your projects
+- ✅ **Dependency flow**: Presentation → Domain ← Data
 
-## 🏗️ Project Structure
+## 🏗️ Project Structure (Clean Architecture)
 
 ```
 lib/
-├── bloc/                      # BLoC pattern examples
-│   ├── user_bloc.dart        # BLoC implementation (User demo)
-│   ├── user_event.dart       # Event definitions
-│   ├── user_state.dart       # State definitions
-│   ├── product_bloc.dart     # BLoC for BlocConsumer (Product demo)
-│   ├── product_event.dart    # 7 events including cart actions
-│   └── product_state.dart    # 8 states including action states
-├── cubit/                     # Cubit pattern example
-│   ├── post_cubit.dart       # Cubit implementation (no events!)
-│   └── post_state.dart       # State definitions
-├── models/
-│   ├── user.dart             # User data model
-│   ├── post.dart             # Post data model
-│   └── product.dart          # Product data model with copyWith
-├── screens/
-│   ├── home_screen.dart      # Home screen with pattern selection
-│   ├── user_list_screen.dart # BLoC pattern UI
-│   ├── post_list_screen.dart # Cubit pattern UI
-│   └── product_list_screen.dart # BlocConsumer demo (shopping cart)
-├── services/
-│   ├── user_api_service.dart # Simulated User API
-│   ├── post_api_service.dart # Simulated Post API
-│   └── product_api_service.dart # Simulated Product API
-└── main.dart                  # App entry point
+├── core/                           # Shared across features
+│   ├── error/
+│   │   └── failures.dart          # Failure classes for error handling
+│   └── usecases/
+│       └── usecase.dart           # Base use case interface
+│
+├── features/                       # Feature-based organization
+│   ├── user/                      # BLoC pattern example
+│   │   ├── domain/                # Business logic layer
+│   │   │   ├── entities/
+│   │   │   │   └── user.dart     # Pure domain entity
+│   │   │   ├── repositories/
+│   │   │   │   └── user_repository.dart # Repository interface
+│   │   │   └── usecases/
+│   │   │       ├── get_users.dart # Use case: Get users
+│   │   │       └── get_users_with_error.dart # Use case: Trigger error
+│   │   ├── data/                  # Data access layer
+│   │   │   ├── datasources/
+│   │   │   │   └── user_remote_datasource.dart # API service
+│   │   │   ├── models/
+│   │   │   │   └── user_model.dart # DTO with JSON serialization
+│   │   │   └── repositories/
+│   │   │       └── user_repository_impl.dart # Repository implementation
+│   │   └── presentation/          # UI layer
+│   │       ├── bloc/
+│   │       │   ├── user_bloc.dart    # BLoC implementation
+│   │       │   ├── user_event.dart   # Event definitions
+│   │       │   └── user_state.dart   # State definitions
+│   │       └── screens/
+│   │           └── user_list_screen.dart # BLoC pattern UI
+│   │
+│   ├── post/                      # Cubit pattern example
+│   │   ├── domain/
+│   │   │   ├── entities/
+│   │   │   │   └── post.dart
+│   │   │   ├── repositories/
+│   │   │   │   └── post_repository.dart
+│   │   │   └── usecases/
+│   │   │       ├── get_posts.dart
+│   │   │       └── get_posts_with_error.dart
+│   │   ├── data/
+│   │   │   ├── datasources/
+│   │   │   │   └── post_remote_datasource.dart
+│   │   │   ├── models/
+│   │   │   │   └── post_model.dart
+│   │   │   └── repositories/
+│   │   │       └── post_repository_impl.dart
+│   │   └── presentation/
+│   │       ├── cubit/
+│   │       │   ├── post_cubit.dart   # Cubit implementation (no events!)
+│   │       │   └── post_state.dart   # State definitions
+│   │       └── screens/
+│   │           └── post_list_screen.dart # Cubit pattern UI
+│   │
+│   ├── product/                   # BlocConsumer pattern example
+│   │   ├── domain/
+│   │   │   ├── entities/
+│   │   │   │   └── product.dart # with copyWith for cart updates
+│   │   │   ├── repositories/
+│   │   │   │   └── product_repository.dart
+│   │   │   └── usecases/
+│   │   │       └── get_products.dart
+│   │   ├── data/
+│   │   │   ├── datasources/
+│   │   │   │   └── product_remote_datasource.dart
+│   │   │   ├── models/
+│   │   │   │   └── product_model.dart
+│   │   │   └── repositories/
+│   │   │       └── product_repository_impl.dart
+│   │   └── presentation/
+│   │       ├── bloc/
+│   │       │   ├── product_bloc.dart    # BLoC for BlocConsumer
+│   │       │   ├── product_event.dart   # 7 events including cart actions
+│   │       │   └── product_state.dart   # 8 states including action states
+│   │       └── screens/
+│   │           └── product_list_screen.dart # BlocConsumer demo
+│   │
+│   └── home/
+│       └── home_screen.dart       # Home screen with pattern selection
+│
+└── main.dart                      # App entry point
+```
+
+## 🏛️ Clean Architecture Layers
+
+### 1. Domain Layer (Innermost - No Dependencies)
+**Pure business logic - independent of frameworks**
+
+- **Entities**: Core business objects (User, Post, Product)
+  - Pure Dart classes with business rules
+  - No JSON serialization
+  - No framework dependencies
+  
+- **Repositories**: Abstract interfaces defining data operations
+  - Contracts that data layer must implement
+  - Return entities, not models
+  
+- **Use Cases**: Single-responsibility business operations
+  - GetUsers, GetPosts, GetProducts
+  - Contains business logic
+  - Called by presentation layer
+
+### 2. Data Layer (Depends on Domain)
+**Data access implementation**
+
+- **Data Sources**: Remote/local data fetching (API services)
+  - `UserRemoteDataSource` - API calls with Future.delayed (2s mock)
+  - Returns models, not entities
+  
+- **Models**: DTOs extending entities with JSON serialization
+  - `UserModel extends User` - adds fromJson/toJson
+  - Handles data transformation
+  
+- **Repository Implementations**: Concrete implementations
+  - `UserRepositoryImpl implements UserRepository`
+  - Calls data sources, returns entities
+
+### 3. Presentation Layer (Depends on Domain)
+**UI and state management**
+
+- **BLoC/Cubit**: State management using use cases
+  - UserBloc calls GetUsers use case (not repository!)
+  - PostCubit calls GetPosts use case
+  - ProductBloc calls GetProducts use case
+  
+- **Screens**: UI components
+  - BlocProvider, BlocBuilder, BlocConsumer
+  - Dispatches events or calls methods
+  
+- **States**: UI state representations
+  - Initial, Loading, Loaded, Error, Action states
+
+### Dependency Flow
+```
+Presentation Layer → Domain Layer ← Data Layer
+     (UI)              (Logic)        (API)
+     
+   UserBloc    →    GetUsers    ←   UserRepositoryImpl
+                  (Use Case)      (calls UserRemoteDataSource)
 ```
 
 ## 🎯 Key Concepts
 
 ### BLoC Pattern (User Example)
+
+#### Clean Architecture Integration
+- **UserBloc** (Presentation) → **GetUsers** (Domain) → **UserRepository** (Domain interface) → **UserRepositoryImpl** (Data) → **UserRemoteDataSource** (Data)
 
 #### 1. Events
 Events represent user actions or system events:
@@ -61,17 +184,21 @@ Events represent user actions or system events:
 States represent the current condition of the UI:
 - `UserInitialState` - Initial state before any action
 - `UserLoadingState` - Data is being loaded (shows loading indicator)
-- `UserLoadedState` - Data loaded successfully (shows user list)
+- `UserLoadedState` - Data loaded successfully (shows user list of entities)
 - `UserErrorState` - An error occurred (shows error message)
 
 #### 3. BLoC
 The `UserBloc` class:
 - Receives events from the UI
-- Calls the API service
+- Calls **use cases** (not repositories or services directly!)
 - Emits appropriate states based on the result
 - Keeps business logic separate from UI
+- Works with entities from domain layer
 
 ### Cubit Pattern (Post Example)
+
+#### Clean Architecture Integration
+- **PostCubit** (Presentation) → **GetPosts** (Domain) → **PostRepository** (Domain interface) → **PostRepositoryImpl** (Data) → **PostRemoteDataSource** (Data)
 
 #### 1. No Events!
 Cubit doesn't use events - you call methods directly:
@@ -86,19 +213,22 @@ context.read<PostCubit>().loadPosts();
 #### 2. States (Same Pattern as BLoC)
 - `PostInitialState` - Initial state
 - `PostLoadingState` - Data is being loaded
-- `PostLoadedState` - Data loaded successfully
+- `PostLoadedState` - Data loaded successfully (contains entities)
 - `PostErrorState` - An error occurred
 - `PostRefreshingState` - Refreshing while showing old data
 
 #### 3. Cubit Methods
 The `PostCubit` class provides direct methods:
-- `loadPosts()` - Load posts from API
-- `loadPostsWithError()` - Simulate error
+- `loadPosts()` - Load posts from API via GetPosts use case
+- `loadPostsWithError()` - Simulate error via GetPostsWithError use case
 - `retry()` - Retry after error
 - `refreshPosts()` - Refresh with optimistic update
 - `clear()` - Reset to initial state
 
 ### BlocConsumer Pattern (Product Example - Shopping Cart)
+
+#### Clean Architecture Integration
+- **ProductBloc** (Presentation) → **GetProducts** (Domain) → **ProductRepository** (Domain interface) → **ProductRepositoryImpl** (Data) → **ProductRemoteDataSource** (Data)
 
 #### 1. What is BlocConsumer?
 BlocConsumer **combines** `BlocBuilder` and `BlocListener` into one widget:
@@ -125,10 +255,12 @@ BlocConsumer<ProductBloc, ProductState>(
 - `RefreshProductsEvent` - Refresh product list
 - `ResetProductsEvent` - Reset to initial state
 
+Note: Product feature only has one use case (GetProducts) since cart operations are UI state only
+
 #### 3. States (Including Action States)
 - `ProductInitialState` - Starting state
 - `ProductLoadingState` - Products being fetched
-- `ProductLoadedState` - Products loaded (contains products, cartItemCount)
+- `ProductLoadedState` - Products loaded (contains product entities, cartItemCount)
 - **`ProductAddedToCartState`** - Action state with timestamp (triggers listener)
 - **`ProductRemovedFromCartState`** - Action state with timestamp (triggers listener)
 - `ProductErrorState` - Error occurred
@@ -251,74 +383,148 @@ When you launch, you'll see three demo options:
 
 ## 🔍 Code Walkthrough
 
-### BLoC Pattern: API Service (`user_api_service.dart`)
+### Clean Architecture Flow: User Feature
+
+#### 1. Domain Layer - Entity
 ```dart
-Future<List<User>> fetchUsers() async {
-  await Future.delayed(const Duration(seconds: 2)); // Simulates network delay
-  return [/* mock users */];
+// lib/features/user/domain/entities/user.dart
+class User {
+  final int id;
+  final String name;
+  final String email;
+  final String role;
+
+  User({required this.id, required this.name, required this.email, required this.role});
+  // Pure domain object - no JSON, no dependencies
 }
 ```
 
-### BLoC Pattern: Event Handler (`user_bloc.dart`)
+#### 2. Data Layer - Model (extends Entity)
 ```dart
-Future<void> _onLoadUsers(LoadUsersEvent event, Emitter<UserState> emit) async {
-  emit(UserLoadingState());           // Show loading
-  try {
-    final users = await userApiService.fetchUsers();
-    emit(UserLoadedState(users));     // Show data
-  } catch (error) {
-    emit(UserErrorState(error.toString())); // Show error
+// lib/features/user/data/models/user_model.dart
+class UserModel extends User {
+  UserModel({required super.id, required super.name, required super.email, required super.role});
+
+  factory UserModel.fromJson(Map<String, dynamic> json) {
+    return UserModel(
+      id: json['id'],
+      name: json['name'],
+      email: json['email'],
+      role: json['role'],
+    );
+  }
+  // Model adds JSON serialization
+}
+```
+
+#### 3. Data Layer - Remote Data Source
+```dart
+// lib/features/user/data/datasources/user_remote_datasource.dart
+class UserRemoteDataSource {
+  Future<List<UserModel>> getUsers() async {
+    await Future.delayed(const Duration(seconds: 2)); // Simulates network delay
+    return [/* mock user models */];
+  }
+
+  Future<List<UserModel>> getUsersWithError() async {
+    await Future.delayed(const Duration(seconds: 2));
+    throw Exception('Failed to load users');
   }
 }
 ```
 
-### BLoC Pattern: UI with BlocBuilder (`user_list_screen.dart`)
+#### 4. Domain Layer - Repository Interface
 ```dart
+// lib/features/user/domain/repositories/user_repository.dart
+abstract class UserRepository {
+  Future<List<User>> getUsers();
+  Future<List<User>> getUsersWithError();
+}
+```
+
+#### 5. Data Layer - Repository Implementation
+```dart
+// lib/features/user/data/repositories/user_repository_impl.dart
+class UserRepositoryImpl implements UserRepository {
+  final UserRemoteDataSource remoteDataSource;
+
+  UserRepositoryImpl({required this.remoteDataSource});
+
+  @override
+  Future<List<User>> getUsers() async {
+    // Calls data source, returns entities
+    return await remoteDataSource.getUsers();
+  }
+}
+```
+
+#### 6. Domain Layer - Use Case
+```dart
+// lib/features/user/domain/usecases/get_users.dart
+class GetUsers implements UseCase<List<User>, NoParams> {
+  final UserRepository repository;
+
+  GetUsers(this.repository);
+
+  @override
+  Future<List<User>> call(NoParams params) async {
+    return await repository.getUsers();
+  }
+}
+```
+
+#### 7. Presentation Layer - BLoC
+```dart
+// lib/features/user/presentation/bloc/user_bloc.dart
+class UserBloc extends Bloc<UserEvent, UserState> {
+  final GetUsers getUsersUseCase;
+  final GetUsersWithError getUsersWithErrorUseCase;
+
+  UserBloc({required this.getUsersUseCase, required this.getUsersWithErrorUseCase}) 
+      : super(UserInitialState()) {
+    on<LoadUsersEvent>(_onLoadUsers);
+  }
+
+  Future<void> _onLoadUsers(LoadUsersEvent event, Emitter<UserState> emit) async {
+    emit(UserLoadingState());
+    try {
+      final users = await getUsersUseCase(NoParams()); // Calls use case!
+      emit(UserLoadedState(users));
+    } catch (error) {
+      emit(UserErrorState(error.toString()));
+    }
+  }
+}
+```
+
+#### 8. Presentation Layer - UI
+```dart
+// lib/features/user/presentation/screens/user_list_screen.dart
 BlocBuilder<UserBloc, UserState>(
   builder: (context, state) {
     return switch (state) {
       UserInitialState() => _buildInitialView(context),
       UserLoadingState() => _buildLoadingView(),
-      UserLoadedState() => _buildLoadedView(state.users),
+      UserLoadedState() => _buildLoadedView(state.users), // Uses entities
       UserErrorState() => _buildErrorView(context, state.errorMessage),
     };
   },
 )
 ```
 
-### Cubit Pattern: Direct Method (`post_cubit.dart`)
+### Cubit Pattern: Post Feature (Same Architecture)
+
 ```dart
+// Post Cubit calls use case directly
 Future<void> loadPosts() async {
-  emit(PostLoadingState());           // Show loading
+  emit(PostLoadingState());
   try {
-    final posts = await postApiService.fetchPosts();
-    emit(PostLoadedState(posts));     // Show data
+    final posts = await getPostsUseCase(NoParams()); // Calls GetPosts use case
+    emit(PostLoadedState(posts));
   } catch (error) {
-    emit(PostErrorState(error.toString())); // Show error
+    emit(PostErrorState(error.toString()));
   }
 }
-```
-
-### Cubit Pattern: UI Calling Method (`post_list_screen.dart`)
-```dart
-// Dispatching is simpler - just call the method!
-ElevatedButton(
-  onPressed: () => context.read<PostCubit>().loadPosts(),
-  child: Text('Load Posts'),
-)
-
-// BlocBuilder works the same way
-BlocBuilder<PostCubit, PostState>(
-  builder: (context, state) {
-    return switch (state) {
-      PostInitialState() => _buildInitialView(context),
-      PostLoadingState() => _buildLoadingView(),
-      PostLoadedState() => _buildLoadedView(state.posts, false),
-      PostRefreshingState() => _buildLoadedView(state.currentPosts, true),
-      PostErrorState() => _buildErrorView(context, state.errorMessage),
-    };
-  },
-)
 ```
 
 ## 📦 Dependencies
@@ -329,13 +535,19 @@ BlocBuilder<PostCubit, PostState>(
 
 ## 💡 Best Practices Demonstrated
 
-1. **Separation of Concerns**: Business logic is in BLoC/Cubit, UI is in widgets
-2. **Immutable States**: All states are immutable for predictability
-3. **Error Handling**: Proper error handling with user-friendly messages
-4. **Loading States**: Clear feedback during async operations
-5. **Sealed Classes**: Using sealed classes for type-safe state handling
-6. **Dependency Injection**: BLoC/Cubit receives API service via constructor
-7. **Pattern Selection**: Choose the right tool (BLoC vs Cubit) for the job
+1. **Clean Architecture**: Domain, data, and presentation layers properly separated
+2. **Dependency Inversion**: BLoC/Cubit depends on use cases (abstractions), not concrete implementations
+3. **Use Cases**: Single Responsibility Principle - one use case per operation
+4. **Repository Pattern**: Abstract interfaces in domain, implementations in data layer
+5. **Entities vs Models**: Pure domain objects vs DTOs with serialization
+6. **Separation of Concerns**: Business logic is in domain layer, not in BLoC/Cubit or UI
+7. **Immutable States**: All states are immutable for predictability
+8. **Error Handling**: Proper error handling with user-friendly messages and Failure classes
+9. **Loading States**: Clear feedback during async operations
+10. **Sealed Classes**: Using sealed classes for type-safe state handling
+11. **Dependency Injection**: BLoC/Cubit receives use cases via constructor
+12. **Pattern Selection**: Choose the right tool (BLoC vs Cubit vs BlocConsumer) for the job
+13. **Testability**: Each layer can be tested independently with mocks
 
 ## 🎨 Advanced Patterns Demonstrated
 
@@ -382,12 +594,14 @@ Want to experiment? Try these:
 ## 📖 Learn More
 
 ### Documentation Files
-- **ARCHITECTURE.md** - Flow diagrams for both patterns
+- **CLEAN_ARCHITECTURE_GUIDE.md** - Clean Architecture restructuring guide
+- **CLEAN_ARCHITECTURE_COMPLETE.md** - Complete Clean Architecture implementation
+- **ARCHITECTURE.md** - Flow diagrams for all three patterns
 - **QUICK_REFERENCE.md** - Code snippets and common patterns
 - **CUBIT_GUIDE.md** - Deep dive into Cubit vs BLoC
 - **BLOC_CONSUMER_TUTORIAL.md** - Complete guide to BlocConsumer widget
-- **BLOC_CONSUMER_DEMO.md** - Working product store demo with BlocConsumer
-- **EXERCISES.md** - Practice exercises for both patterns
+- **BLOCCONSUMER_IMPLEMENTATION_COMPLETE.md** - BlocConsumer implementation details
+- **EXERCISES.md** - Practice exercises for all three patterns
 - **BEGINNERS_GUIDE.dart** - Step-by-step explanation
 - **TUTORIAL_OVERVIEW.md** - Complete package overview
 

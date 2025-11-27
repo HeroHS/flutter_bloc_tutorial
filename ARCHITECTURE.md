@@ -1,59 +1,129 @@
-# State Management Architecture - BLoC & Cubit
+# Clean Architecture + State Management - BLoC, Cubit & BlocConsumer
 
 ## Overview
 
-This tutorial demonstrates **two state management patterns**: BLoC (Business Logic Component) and Cubit. Both patterns use the same foundational concepts but differ in how they trigger state changes.
+This tutorial demonstrates **Clean Architecture** with **three state management patterns**: BLoC (event-driven), Cubit (method-driven), and BlocConsumer (builder + listener). All patterns follow Clean Architecture principles with proper layer separation.
+
+## Clean Architecture Layers
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                     PRESENTATION LAYER                               │
+│         (BLoC/Cubit + Screens + States + Events)                    │
+│  Depends on: Domain Layer only (Use Cases, Entities, Repositories)  │
+└─────────────────────────────────────────────────────────────────────┘
+                              ↓ depends on ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│                       DOMAIN LAYER                                   │
+│     (Entities + Repository Interfaces + Use Cases)                  │
+│  Depends on: NOTHING! Pure Dart, no framework dependencies          │
+└─────────────────────────────────────────────────────────────────────┘
+                              ↑ implements ↑
+┌─────────────────────────────────────────────────────────────────────┐
+│                        DATA LAYER                                    │
+│  (Models + Repository Implementations + Data Sources)               │
+│  Depends on: Domain Layer (implements repository interfaces)        │
+└─────────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
-## BLoC Pattern Flow (User Example)
+## BLoC Pattern Flow (User Example with Clean Architecture)
 
 ### The Complete Flow
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                         USER INTERFACE                               │
-│                      (user_list_screen.dart)                        │
+│                    PRESENTATION LAYER - UI                           │
+│                   (user_list_screen.dart)                           │
 └─────────────────────────────────────────────────────────────────────┘
                                     │
                                     │ User taps button
                                     │
                                     ▼
 ┌─────────────────────────────────────────────────────────────────────┐
-│                        DISPATCH EVENT                                │
+│                    PRESENTATION LAYER - DISPATCH EVENT               │
 │  context.read<UserBloc>().add(LoadUsersEvent())                     │
 └─────────────────────────────────────────────────────────────────────┘
                                     │
-                                    │
+                                    │ Event reaches BLoC
                                     ▼
 ┌─────────────────────────────────────────────────────────────────────┐
-│                           USER BLOC                                  │
+│                    PRESENTATION LAYER - USER BLOC                    │
 │                        (user_bloc.dart)                             │
 │                                                                      │
 │  Event Handler: _onLoadUsers()                                      │
 │  1. emit(UserLoadingState())                                        │
-│  2. Call API service                                                │
+│  2. Call USE CASE (not repository!)                                 │
 │  3. emit(UserLoadedState(users)) OR emit(UserErrorState(error))    │
 └─────────────────────────────────────────────────────────────────────┘
                                     │
-                                    │ Calls API
+                                    │ Calls use case
                                     ▼
 ┌─────────────────────────────────────────────────────────────────────┐
-│                        API SERVICE                                   │
-│                    (user_api_service.dart)                          │
+│                    DOMAIN LAYER - USE CASE                           │
+│                    (get_users.dart)                                 │
 │                                                                      │
-│  Future.delayed(Duration(seconds: 2))                               │
-│  Returns mock user data                                             │
+│  class GetUsers implements UseCase<List<User>, NoParams> {         │
+│    Future<List<User>> call(NoParams params) {                      │
+│      return repository.getUsers();                                  │
+│    }                                                                │
+│  }                                                                   │
 └─────────────────────────────────────────────────────────────────────┘
                                     │
-                                    │ Returns data
+                                    │ Calls repository interface
                                     ▼
 ┌─────────────────────────────────────────────────────────────────────┐
-│                       EMIT NEW STATE                                 │
-│  Stream<UserState> → BlocBuilder receives new state                 │
+│                 DOMAIN LAYER - REPOSITORY INTERFACE                  │
+│                    (user_repository.dart)                           │
+│                                                                      │
+│  abstract class UserRepository {                                    │
+│    Future<List<User>> getUsers();                                   │
+│  }                                                                   │
 └─────────────────────────────────────────────────────────────────────┘
                                     │
+                                    │ Implemented by
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                 DATA LAYER - REPOSITORY IMPLEMENTATION               │
+│                 (user_repository_impl.dart)                         │
+│                                                                      │
+│  class UserRepositoryImpl implements UserRepository {              │
+│    Future<List<User>> getUsers() async {                           │
+│      return await remoteDataSource.getUsers();                      │
+│    }                                                                │
+│  }                                                                   │
+└─────────────────────────────────────────────────────────────────────┘
                                     │
+                                    │ Calls data source
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                    DATA LAYER - REMOTE DATA SOURCE                   │
+│                 (user_remote_datasource.dart)                       │
+│                                                                      │
+│  Future<List<UserModel>> getUsers() async {                        │
+│    await Future.delayed(Duration(seconds: 2));                      │
+│    return [UserModel(...), UserModel(...)];                         │
+│  }                                                                   │
+└─────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    │ Returns models (DTOs)
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│               DATA LAYER - MODEL → ENTITY CONVERSION                 │
+│  UserModel extends User (entity)                                    │
+│  Returns List<User> (entities) to repository                        │
+└─────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    │ Returns entities up the chain
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                    PRESENTATION - EMIT NEW STATE                     │
+│  Stream<UserState> → BlocBuilder receives new state                 │
+│  State contains List<User> entities (not models!)                   │
+└─────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    │ UI rebuilds
                                     ▼
 ┌─────────────────────────────────────────────────────────────────────┐
 │                    UI REBUILDS (BlocBuilder)                         │
@@ -61,7 +131,7 @@ This tutorial demonstrates **two state management patterns**: BLoC (Business Log
 │  switch (state) {                                                   │
 │    UserInitialState() => Show welcome screen                        │
 │    UserLoadingState() => Show loading spinner                       │
-│    UserLoadedState()  => Show user list                             │
+│    UserLoadedState()  => Show user list (entities)                  │
 │    UserErrorState()   => Show error message                         │
 │  }                                                                   │
 └─────────────────────────────────────────────────────────────────────┘
