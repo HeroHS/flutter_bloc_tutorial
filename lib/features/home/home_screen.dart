@@ -17,6 +17,15 @@ import '../product/presentation/bloc/product_bloc.dart';
 import '../product/domain/usecases/get_products.dart';
 import '../product/data/repositories/product_repository_impl.dart';
 import '../product/data/datasources/product_remote_datasource.dart';
+import '../todo/presentation/screens/todo_list_screen.dart';
+import '../todo/presentation/cubit/todo_cubit.dart';
+import '../todo/domain/usecases/get_todos.dart';
+import '../todo/domain/usecases/get_todo_by_id.dart';
+import '../todo/domain/usecases/add_todo.dart';
+import '../todo/domain/usecases/toggle_todo.dart';
+import '../todo/domain/usecases/delete_todo.dart';
+import '../todo/data/repositories/todo_repository_impl.dart';
+import '../todo/data/datasources/todo_remote_datasource.dart';
 
 /// Home Screen - Navigation hub for all features
 ///
@@ -27,7 +36,8 @@ import '../product/data/datasources/product_remote_datasource.dart';
 /// FEATURES:
 /// 1. User Management (BLoC Pattern)
 /// 2. Post Management (Cubit Pattern)
-/// 3. Product Management (BLoC Pattern)
+/// 3. Todo Management (Cubit Pattern with BlocConsumer)
+/// 4. Product Management (BLoC Pattern with BlocConsumer)
 ///
 /// DEPENDENCY INJECTION:
 /// Each feature creates its dependencies here before navigation.
@@ -50,36 +60,52 @@ class HomeScreen extends StatelessWidget {
           children: [
             _buildWelcomeCard(),
             const SizedBox(height: 24),
-            _buildFeatureCard(
-              context,
-              title: 'User Management',
-              subtitle: 'BLoC Pattern with Events',
-              icon: Icons.people,
-              color: Colors.blue,
-              onTap: () => _navigateToUsers(context),
-              description: 'Event-driven state management',
+            Expanded(
+              child: ListView(
+                children: [
+                  _buildFeatureListCard(
+                    context,
+                    title: 'Posts',
+                    subtitle: 'Cubit Pattern',
+                    icon: Icons.article,
+                    color: Colors.brown,
+                    onTap: () => _navigateToPosts(context),
+                    badge: 'Methods',
+                  ),
+                  const SizedBox(height: 12),
+                  _buildFeatureListCard(
+                    context,
+                    title: 'Users',
+                    subtitle: 'BLoC Pattern',
+                    icon: Icons.people,
+                    color: Colors.blue,
+                    onTap: () => _navigateToUsers(context),
+                    badge: 'Events',
+                  ),
+                  const SizedBox(height: 12),
+                  _buildFeatureListCard(
+                    context,
+                    title: 'Todos',
+                    subtitle: 'Cubit with BlocConsumer',
+                    icon: Icons.checklist,
+                    color: Colors.purple,
+                    onTap: () => _navigateToTodos(context),
+                    badge: 'Methods',
+                  ),
+                  const SizedBox(height: 12),
+                  _buildFeatureListCard(
+                    context,
+                    title: 'Products',
+                    subtitle: 'BLoC with BlocConsumer',
+                    icon: Icons.shopping_cart,
+                    color: Colors.orange,
+                    onTap: () => _navigateToProducts(context),
+                    badge: 'Events',
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 16),
-            _buildFeatureCard(
-              context,
-              title: 'Post Management',
-              subtitle: 'Cubit Pattern with Direct Methods',
-              icon: Icons.article,
-              color: Colors.green,
-              onTap: () => _navigateToPosts(context),
-              description: 'Simplified state management',
-            ),
-            const SizedBox(height: 16),
-            _buildFeatureCard(
-              context,
-              title: 'Product Management',
-              subtitle: 'BLoC Pattern with Events',
-              icon: Icons.shopping_cart,
-              color: Colors.orange,
-              onTap: () => _navigateToProducts(context),
-              description: 'Event-driven product catalog',
-            ),
-            const Spacer(),
             _buildArchitectureInfo(),
           ],
         ),
@@ -117,17 +143,18 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildFeatureCard(
+  Widget _buildFeatureListCard(
     BuildContext context, {
     required String title,
     required String subtitle,
     required IconData icon,
     required Color color,
     required VoidCallback onTap,
-    required String description,
+    required String badge,
   }) {
     return Card(
-      elevation: 2,
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
@@ -136,9 +163,9 @@ class HomeScreen extends StatelessWidget {
           child: Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(icon, size: 32, color: color),
@@ -159,23 +186,31 @@ class HomeScreen extends StatelessWidget {
                     Text(
                       subtitle,
                       style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey.shade700,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      description,
-                      style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 13,
                         color: Colors.grey.shade600,
-                        fontStyle: FontStyle.italic,
                       ),
                     ),
                   ],
                 ),
               ),
-              Icon(Icons.arrow_forward_ios, color: Colors.grey.shade400),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  badge,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -202,10 +237,7 @@ class HomeScreen extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             'Presentation → Domain ← Data',
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey.shade600,
-            ),
+            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
           ),
         ],
       ),
@@ -261,6 +293,38 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
+  /// Navigate to Todo screen with Cubit dependency injection
+  ///
+  /// DEMONSTRATES BLOCCONSUMER PATTERN:
+  /// - Shows how to listen to state changes for SnackBars
+  /// - Prevents user interaction during processing
+  /// - Specific states for add/toggle/delete operations
+  void _navigateToTodos(BuildContext context) {
+    final dataSource = TodoRemoteDataSourceImpl();
+    final repository = TodoRepositoryImpl(remoteDataSource: dataSource);
+    final getTodosUseCase = GetTodos(repository);
+    final getTodoByIdUseCase = GetTodoById(repository);
+    final addTodoUseCase = AddTodo(repository);
+    final toggleTodoUseCase = ToggleTodo(repository);
+    final deleteTodoUseCase = DeleteTodo(repository);
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => BlocProvider(
+          create: (context) => TodoCubit(
+            getTodosUseCase: getTodosUseCase,
+            getTodoByIdUseCase: getTodoByIdUseCase,
+            addTodoUseCase: addTodoUseCase,
+            toggleTodoUseCase: toggleTodoUseCase,
+            deleteTodoUseCase: deleteTodoUseCase,
+          ),
+          child: const TodoListScreen(),
+        ),
+      ),
+    );
+  }
+
   /// Navigate to Product screen with BLoC dependency injection
   void _navigateToProducts(BuildContext context) {
     final dataSource = ProductRemoteDataSourceImpl();
@@ -271,9 +335,8 @@ class HomeScreen extends StatelessWidget {
       context,
       MaterialPageRoute(
         builder: (context) => BlocProvider(
-          create: (context) => ProductBloc(
-            getProductsUseCase: getProductsUseCase,
-          ),
+          create: (context) =>
+              ProductBloc(getProductsUseCase: getProductsUseCase),
           child: const ProductListScreen(),
         ),
       ),

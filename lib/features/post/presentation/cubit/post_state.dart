@@ -34,7 +34,7 @@ sealed class PostState {}
 /// - Cubit constructor: super(PostInitialState())
 /// - After calling clear() or reset() methods
 /// - Before user triggers any data loading
-final class PostInitialState extends PostState {}
+final class PostInitial extends PostState {}
 
 /// State when data is being loaded from the API
 ///
@@ -46,7 +46,7 @@ final class PostInitialState extends PostState {}
 /// UI BEHAVIOR:
 /// - Show CircularProgressIndicator centered
 /// - Display "Loading posts..." message
-final class PostLoadingState extends PostState {}
+final class PostLoading extends PostState {}
 
 /// State when data has been successfully loaded
 ///
@@ -63,10 +63,10 @@ final class PostLoadingState extends PostState {}
 /// IMMUTABILITY:
 /// - The List<Post> is final
 /// - To update, emit new PostLoadedState with new list
-final class PostLoadedState extends PostState {
+final class PostLoaded extends PostState {
   final List<Post> posts;
 
-  PostLoadedState(this.posts);
+  PostLoaded(this.posts);
 }
 
 /// State when an error occurred while loading data
@@ -80,10 +80,10 @@ final class PostLoadedState extends PostState {
 /// - Display error message
 /// - Show retry button
 /// - Use error color scheme
-final class PostErrorState extends PostState {
+final class PostError extends PostState {
   final String errorMessage;
 
-  PostErrorState(this.errorMessage);
+  PostError(this.errorMessage);
 }
 
 /// State when refreshing while displaying old data
@@ -109,8 +109,8 @@ final class PostErrorState extends PostState {
 /// PATTERN USAGE:
 /// This demonstrates you can have as many states as needed!
 /// Don't limit yourself to just Initial/Loading/Loaded/Error.
-final class PostRefreshingState extends PostState {
+final class PostRefreshing extends PostState {
   final List<Post> currentPosts; // Keep showing these while refreshing
 
-  PostRefreshingState(this.currentPosts);
+  PostRefreshing(this.currentPosts);
 }

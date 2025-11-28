@@ -11,7 +11,7 @@ sealed class ProductEvent {}
 /// - Triggers initial data fetch
 /// - No parameters needed
 /// - Emits: Loading → Loaded/Error
-final class LoadProductsEvent extends ProductEvent {}
+final class ProductLoadedEvent extends ProductEvent {}
 
 /// Event to add product to cart
 ///
@@ -22,15 +22,15 @@ final class LoadProductsEvent extends ProductEvent {}
 ///
 /// BLOCCONSUMER FLOW:
 /// 1. User taps "Add to Cart"
-/// 2. Event dispatched: AddToCartEvent(id, name)
+/// 2. Event dispatched: ProductAddedToCart(id, name)
 /// 3. BLoC updates product and emits ProductCartUpdatedState
 /// 4. Listener shows: "{productName} added to cart!"
 /// 5. Builder rebuilds UI with updated cart icon
-final class AddToCartEvent extends ProductEvent {
+final class ProductAddedToCartEvent extends ProductEvent {
   final String productId;
   final String productName;
 
-  AddToCartEvent(this.productId, this.productName);
+  ProductAddedToCartEvent(this.productId, this.productName);
 }
 
 /// Event to remove product from cart
@@ -42,13 +42,17 @@ final class AddToCartEvent extends ProductEvent {
 ///
 /// BLOCCONSUMER FLOW:
 /// 1. User taps "Remove from Cart"
-/// 2. Event dispatched: RemoveFromCartEvent(id, name)
+/// 2. Event dispatched: ProductRemovedFromCart(id, name)
 /// 3. BLoC updates product and emits ProductCartUpdatedState
 /// 4. Listener shows: "{productName} removed from cart"
 /// 5. Builder rebuilds UI with updated cart icon
-final class RemoveFromCartEvent extends ProductEvent {
+final class ProductRemovedFromCartEvent extends ProductEvent {
   final String productId;
   final String productName;
 
-  RemoveFromCartEvent(this.productId, this.productName);
+  ProductRemovedFromCartEvent(this.productId, this.productName);
 }
+
+final class ProductCheckedoutEvent extends ProductEvent {}
+
+final class ProductResetEvent extends ProductEvent {}

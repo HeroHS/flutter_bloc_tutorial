@@ -61,7 +61,7 @@ class PostCubit extends Cubit<PostState> {
   PostCubit({
     required this.getPostsUseCase,
     required this.getPostsWithErrorUseCase,
-  }) : super(PostInitialState());
+  }) : super(PostInitial());
 
   /// Load posts from the API
   ///
@@ -83,19 +83,19 @@ class PostCubit extends Cubit<PostState> {
   /// - State changes trigger UI rebuilds via BlocBuilder
   Future<void> loadPosts() async {
     // Emit loading state - UI will show loading indicator
-    emit(PostLoadingState());
+    emit(PostLoading());
 
     try {
       // Call use case to fetch posts
       // NoParams() because this use case doesn't need parameters
       final posts = await getPostsUseCase(NoParams());
-      
+
       // Emit success state with the fetched posts
-      emit(PostLoadedState(posts));
+      emit(PostLoaded(posts));
     } catch (error) {
       // Emit error state with error message
       // In production, consider custom error types for better handling
-      emit(PostErrorState(error.toString()));
+      emit(PostError(error.toString()));
     }
   }
 
@@ -106,14 +106,14 @@ class PostCubit extends Cubit<PostState> {
   /// - Useful for testing error states in UI
   /// - Same pattern as loadPosts() but calls error use case
   Future<void> loadPostsWithError() async {
-    emit(PostLoadingState());
+    emit(PostLoading());
 
     try {
       // This use case will throw an exception
       final posts = await getPostsWithErrorUseCase(NoParams());
-      emit(PostLoadedState(posts));
+      emit(PostLoaded(posts));
     } catch (error) {
-      emit(PostErrorState(error.toString()));
+      emit(PostError(error.toString()));
     }
   }
 
@@ -147,28 +147,28 @@ class PostCubit extends Cubit<PostState> {
   /// - This is type-safe because of the is check
   Future<void> refreshPosts() async {
     // Check if we already have data
-    if (state is PostLoadedState) {
+    if (state is PostLoaded) {
       // Keep showing current posts while refreshing
-      final currentPosts = (state as PostLoadedState).posts;
-      emit(PostRefreshingState(currentPosts));
+      final currentPosts = (state as PostLoaded).posts;
+      emit(PostRefreshing(currentPosts));
     } else {
       // No existing data, show loading spinner
-      emit(PostLoadingState());
+      emit(PostLoading());
     }
 
     try {
       // Fetch fresh data
       final posts = await getPostsUseCase(NoParams());
-      emit(PostLoadedState(posts));
+      emit(PostLoaded(posts));
     } catch (error) {
       // If refresh fails and we had previous data, restore it
-      if (state is PostRefreshingState) {
-        final previousPosts = (state as PostRefreshingState).currentPosts;
-        emit(PostLoadedState(previousPosts));
+      if (state is PostRefreshing) {
+        final previousPosts = (state as PostRefreshing).currentPosts;
+        emit(PostLoaded(previousPosts));
         // In production, you might show a SnackBar here
       } else {
         // No previous data, show error
-        emit(PostErrorState(error.toString()));
+        emit(PostError(error.toString()));
       }
     }
   }
@@ -185,7 +185,7 @@ class PostCubit extends Cubit<PostState> {
   /// - Clearing cache
   /// - Resetting form
   void clear() {
-    emit(PostInitialState());
+    emit(PostInitial());
   }
 
   /// Reset to initial state (alias for clear)
@@ -195,13 +195,13 @@ class PostCubit extends Cubit<PostState> {
   /// - Provides semantic clarity (clear vs reset)
   /// - Both do the same thing here
   void reset() {
-    emit(PostInitialState());
+    emit(PostInitial());
   }
 
   // ADDITIONAL PATTERNS YOU CAN IMPLEMENT:
-  
+
   /// Example: Method with parameters
-  /// 
+  ///
   /// PARAMETERIZED METHODS:
   /// - Cubit methods can accept parameters
   /// - Parameters influence the state emitted
@@ -210,7 +210,7 @@ class PostCubit extends Cubit<PostState> {
   // void searchPosts(String query) {
   //   emit(PostLoadingState());
   //   // Filter posts by query
-  //   final filteredPosts = posts.where((p) => 
+  //   final filteredPosts = posts.where((p) =>
   //     p.title.toLowerCase().contains(query.toLowerCase())
   //   ).toList();
   //   emit(PostLoadedState(filteredPosts));

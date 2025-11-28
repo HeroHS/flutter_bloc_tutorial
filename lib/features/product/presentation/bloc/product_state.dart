@@ -11,7 +11,7 @@ import '../../domain/entities/product.dart';
 sealed class ProductState {}
 
 /// Initial state before any data loading
-final class ProductInitialState extends ProductState {}
+final class ProductInitial extends ProductState {}
 
 /// State when data is being loaded from the API
 ///
@@ -19,7 +19,7 @@ final class ProductInitialState extends ProductState {}
 /// - Emitted immediately after LoadProductsEvent
 /// - Builder shows CircularProgressIndicator
 /// - No listener action needed
-final class ProductLoadingState extends ProductState {}
+final class ProductLoading extends ProductState {}
 
 /// State when products are successfully loaded
 ///
@@ -27,10 +27,10 @@ final class ProductLoadingState extends ProductState {}
 /// - Contains list of products
 /// - Builder displays the product list
 /// - No listener action (products just loaded)
-final class ProductLoadedState extends ProductState {
+final class ProductLoaded extends ProductState {
   final List<Product> products;
 
-  ProductLoadedState(this.products);
+  ProductLoaded(this.products);
 }
 
 /// State when cart is updated (item added/removed)
@@ -59,16 +59,22 @@ final class ProductLoadedState extends ProductState {
 ///     // Display state.products
 ///   }
 /// }
-final class ProductCartUpdatedState extends ProductState {
+final class ProductCartUpdated extends ProductState {
   final List<Product> products;
   final String productName;
   final bool addedToCart;
 
-  ProductCartUpdatedState({
+  ProductCartUpdated({
     required this.products,
     required this.productName,
     required this.addedToCart,
   });
+}
+
+final class ProductCheckout extends ProductState {
+  final List<Product> products;
+
+  ProductCheckout(this.products);
 }
 
 /// State when an error occurred
@@ -77,8 +83,8 @@ final class ProductCartUpdatedState extends ProductState {
 /// - Contains error message
 /// - Builder shows error UI with retry button
 /// - Could add listener to log errors
-final class ProductErrorState extends ProductState {
+final class ProductError extends ProductState {
   final String errorMessage;
 
-  ProductErrorState(this.errorMessage);
+  ProductError(this.errorMessage);
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/product_bloc.dart';
 import '../bloc/product_event.dart';
@@ -47,7 +48,7 @@ class ProductListScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     // Trigger initial load when screen builds
     // This ensures products are loaded when navigating to this screen
-    context.read<ProductBloc>().add(LoadProductsEvent());
+    context.read<ProductBloc>().add(ProductLoadedEvent());
 
     return Scaffold(
       appBar: AppBar(
@@ -62,36 +63,56 @@ class ProductListScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          _buildInstructionBanner(),
-          Expanded(
-            // 🔑 KEY FEATURE: BlocConsumer combines listener + builder
-            child: BlocConsumer<ProductBloc, ProductState>(
-              // 📢 LISTENER: For side effects (doesn't rebuild UI)
-              // Called when state changes, before builder
-              // Use for: Snackbars, Dialogs, Navigation
-              listener: (context, state) {
-                // Show snackbar when product added/removed from cart
-                if (state is ProductCartUpdatedState) {
-                  _showCartSnackbar(context, state);
-                }
-              },
-              // 🎨 BUILDER: For UI updates (rebuilds widget tree)
-              // Called when state changes
-              // Returns widget based on current state
-              builder: (context, state) {
-                return switch (state) {
-                  ProductInitialState() => _buildInitialView(context),
-                  ProductLoadingState() => _buildLoadingView(),
-                  ProductLoadedState() => _buildLoadedView(context, state.products),
-                  ProductCartUpdatedState() => _buildLoadedView(context, state.products),
-                  ProductErrorState() => _buildErrorView(context, state.errorMessage),
-                };
-              },
-            ),
-          ),
-        ],
+      body: BlocConsumer<ProductBloc, ProductState>(
+        // 📢 LISTENER: For side effects (doesn't rebuild UI)
+        // Called when state changes, before builder
+        // Use for: Snackbars, Dialogs, Navigation
+        listenWhen: (previous, state) {
+          // Only listen for cart updates
+          return state is ProductCartUpdated;
+        },
+        listener: (context, state) {
+          // Show snackbar when product added/removed from cart
+          if (state is ProductCartUpdated) {
+            _showCartSnackbar(context, state);
+          }
+        },
+        // 🎨 BUILDER: For UI updates (rebuilds widget tree)
+        // Called when state changes
+        // Returns widget based on current state
+        builder: (context, state) {
+          // Calculate cart count from current state
+          final cartCount = state is ProductLoaded
+              ? state.products.where((p) => p.inCart).length
+              : state is ProductCartUpdated
+              ? state.products.where((p) => p.inCart).length
+              : 0;
+
+          return Column(
+            children: [
+              _buildInstructionBanner(cartCount),
+              Expanded(
+                child: switch (state) {
+                  ProductInitial() => _buildInitialView(context),
+                  ProductLoading() => _buildLoadingView(),
+                  ProductLoaded() => _buildLoadedView(context, state.products),
+                  ProductCartUpdated() => _buildLoadedView(
+                    context,
+                    state.products,
+                  ),
+                  ProductCheckout() => _buildCheckoutView(
+                    context,
+                    state.products,
+                  ),
+                  ProductError() => _buildErrorView(
+                    context,
+                    state.errorMessage,
+                  ),
+                },
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -101,7 +122,7 @@ class ProductListScreen extends StatelessWidget {
   /// LISTENER SIDE EFFECT:
   /// This is called from the listener callback, not the builder.
   /// Shows temporary feedback to user without rebuilding the entire UI.
-  void _showCartSnackbar(BuildContext context, ProductCartUpdatedState state) {
+  void _showCartSnackbar(BuildContext context, ProductCartUpdated state) {
     final snackBar = SnackBar(
       content: Row(
         children: [
@@ -126,10 +147,11 @@ class ProductListScreen extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
     );
 
+    ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
-  Widget _buildInstructionBanner() {
+  Widget _buildInstructionBanner(int cartCount) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -147,6 +169,49 @@ class ProductListScreen extends StatelessWidget {
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: Colors.orange.shade700,
+                ),
+              ),
+              const Spacer(),
+              // Cart icon - always displayed
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.shopping_cart),
+                      color: cartCount > 0
+                          ? Colors.deepOrangeAccent
+                          : Colors.grey,
+                      onPressed: cartCount > 0 ? () {} : null,
+                    ),
+
+                    // Only show count badge when cart has items
+                    if (cartCount > 0)
+                      Container(
+                        //padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 16,
+                          minHeight: 16,
+                        ),
+                        child: Text(
+                          '$cartCount',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                  ],
                 ),
               ),
             ],
@@ -168,7 +233,11 @@ class ProductListScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.shopping_bag_outlined, size: 100, color: Colors.grey.shade400),
+            Icon(
+              Icons.shopping_bag_outlined,
+              size: 100,
+              color: Colors.grey.shade400,
+            ),
             const SizedBox(height: 24),
             const Text(
               'Loading Products...',
@@ -205,103 +274,129 @@ class ProductListScreen extends StatelessWidget {
   }
 
   Widget _buildLoadedView(BuildContext context, List<Product> products) {
-    // Calculate cart items for display
-    final cartCount = products.where((p) => p.inCart).length;
-
-    return Column(
-      children: [
-        // Cart summary banner
-        if (cartCount > 0)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            color: Colors.green.shade50,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+    return ListView.builder(
+      itemCount: products.length,
+      padding: const EdgeInsets.all(8),
+      itemBuilder: (context, index) {
+        final product = products[index];
+        return Card(
+          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          elevation: product.inCart ? 4 : 1,
+          color: product.inCart ? Colors.green.shade50 : null,
+          child: ListTile(
+            leading: CircleAvatar(
+              backgroundColor: product.inCart
+                  ? Colors.green.shade100
+                  : Colors.orange.shade100,
+              child: Icon(
+                product.inCart ? Icons.check_circle : Icons.shopping_bag,
+                color: product.inCart
+                    ? Colors.green.shade700
+                    : Colors.orange.shade700,
+              ),
+            ),
+            title: Text(
+              product.name,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.shopping_cart, color: Colors.green.shade700),
-                const SizedBox(width: 8),
+                Text(product.description),
+                const SizedBox(height: 4),
                 Text(
-                  '$cartCount item${cartCount != 1 ? 's' : ''} in cart',
+                  '\$${product.price.toStringAsFixed(2)}',
                   style: TextStyle(
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: Colors.green.shade700,
+                    color: Colors.orange.shade700,
                   ),
                 ),
               ],
             ),
+            trailing: IconButton(
+              icon: Icon(
+                product.inCart
+                    ? Icons.remove_shopping_cart
+                    : Icons.add_shopping_cart,
+                color: product.inCart ? Colors.red : Colors.orange,
+              ),
+              onPressed: () {
+                // Dispatch events to toggle cart status
+                // BLoC will emit ProductCartUpdatedState
+                // Listener will show snackbar
+                // Builder will rebuild UI
+                if (product.inCart) {
+                  context.read<ProductBloc>().add(
+                    ProductRemovedFromCartEvent(product.id, product.name),
+                  );
+                } else {
+                  context.read<ProductBloc>().add(
+                    ProductAddedToCartEvent(product.id, product.name),
+                  );
+                }
+              },
+            ),
+            isThreeLine: true,
           ),
-        Expanded(
-          child: ListView.builder(
-            itemCount: products.length,
-            padding: const EdgeInsets.all(8),
-            itemBuilder: (context, index) {
-              final product = products[index];
-              return Card(
-                margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                elevation: product.inCart ? 4 : 1,
-                color: product.inCart ? Colors.green.shade50 : null,
-                child: ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: product.inCart 
-                        ? Colors.green.shade100 
-                        : Colors.orange.shade100,
-                    child: Icon(
-                      product.inCart ? Icons.check_circle : Icons.shopping_bag,
-                      color: product.inCart 
-                          ? Colors.green.shade700 
-                          : Colors.orange.shade700,
-                    ),
-                  ),
-                  title: Text(
-                    product.name,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(product.description),
-                      const SizedBox(height: 4),
-                      Text(
-                        '\$${product.price.toStringAsFixed(2)}',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.orange.shade700,
-                        ),
-                      ),
-                    ],
-                  ),
-                  trailing: IconButton(
-                    icon: Icon(
-                      product.inCart 
-                          ? Icons.remove_shopping_cart 
-                          : Icons.add_shopping_cart,
-                      color: product.inCart ? Colors.red : Colors.orange,
-                    ),
-                    onPressed: () {
-                      // Dispatch events to toggle cart status
-                      // BLoC will emit ProductCartUpdatedState
-                      // Listener will show snackbar
-                      // Builder will rebuild UI
-                      if (product.inCart) {
-                        context.read<ProductBloc>().add(
-                          RemoveFromCartEvent(product.id, product.name),
-                        );
-                      } else {
-                        context.read<ProductBloc>().add(
-                          AddToCartEvent(product.id, product.name),
-                        );
-                      }
-                    },
-                  ),
-                  isThreeLine: true,
-                ),
-              );
-            },
-          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildCheckoutView(BuildContext context, List<Product> products) {
+    // Show checkout dialog (in real app, navigate to checkout screen)
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.shopping_cart_checkout, color: Colors.deepPurple),
+            SizedBox(width: 8),
+            Text('Checkout'),
+          ],
         ),
-      ],
+        content: Text(
+          'Proceeding to checkout with ${products.length} item(s).\n\n'
+          'In a real app, this would navigate to the checkout screen.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              // Reset to initial state
+              context.read<ProductBloc>().add(ProductResetEvent());
+            },
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+
+    // Haptic feedback
+    HapticFeedback.heavyImpact();
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.payment, size: 100, color: Colors.green.shade400),
+            const SizedBox(height: 24),
+            const Text(
+              'Proceed to Checkout',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'This is where the checkout process would begin.',
+              style: TextStyle(fontSize: 14, color: Colors.grey),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -331,14 +426,17 @@ class ProductListScreen extends StatelessWidget {
             const SizedBox(height: 32),
             ElevatedButton.icon(
               onPressed: () {
-                context.read<ProductBloc>().add(LoadProductsEvent());
+                context.read<ProductBloc>().add(ProductLoadedEvent());
               },
               icon: const Icon(Icons.refresh),
               label: const Text('Retry'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.orange,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 16,
+                ),
               ),
             ),
           ],

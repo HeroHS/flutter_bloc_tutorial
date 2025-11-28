@@ -14,7 +14,7 @@ class PostListScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Cubit Tutorial - Post List'),
-        backgroundColor: Colors.purple,
+        backgroundColor: Colors.brown,
         foregroundColor: Colors.white,
         actions: [
           IconButton(
@@ -38,12 +38,14 @@ class PostListScreen extends StatelessWidget {
             child: BlocBuilder<PostCubit, PostState>(
               builder: (context, state) {
                 return switch (state) {
-                  PostInitialState() => _buildInitialView(context),
-                  PostLoadingState() => _buildLoadingView(),
-                  PostLoadedState() => _buildLoadedView(state.posts, false),
-                  PostRefreshingState() =>
-                    _buildLoadedView(state.currentPosts, true),
-                  PostErrorState() => _buildErrorView(context, state.errorMessage),
+                  PostInitial() => _buildInitialView(context),
+                  PostLoading() => _buildLoadingView(),
+                  PostLoaded() => _buildLoadedView(state.posts, false),
+                  PostRefreshing() => _buildLoadedView(
+                    state.currentPosts,
+                    true,
+                  ),
+                  PostError() => _buildErrorView(context, state.errorMessage),
                 };
               },
             ),
@@ -57,20 +59,20 @@ class PostListScreen extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
-      color: Colors.purple.shade50,
+      color: Colors.brown.shade50,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.school, color: Colors.purple.shade700),
+              Icon(Icons.school, color: Colors.brown.shade700),
               const SizedBox(width: 8),
               Text(
                 'Cubit Pattern with Clean Architecture',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Colors.purple.shade700,
+                  color: Colors.brown.shade700,
                 ),
               ),
             ],
@@ -92,7 +94,11 @@ class PostListScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.article_outlined, size: 100, color: Colors.grey.shade400),
+            Icon(
+              Icons.article_outlined,
+              size: 100,
+              color: Colors.brown.shade400,
+            ),
             const SizedBox(height: 24),
             const Text(
               'Cubit with Clean Architecture!',
@@ -119,7 +125,7 @@ class PostListScreen extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const CircularProgressIndicator(color: Colors.purple),
+          const CircularProgressIndicator(color: Colors.brown),
           const SizedBox(height: 24),
           const Text(
             'Loading posts...',
@@ -142,7 +148,7 @@ class PostListScreen extends StatelessWidget {
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(8),
-            color: Colors.purple.shade100,
+            color: Colors.brown.shade100,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -151,13 +157,13 @@ class PostListScreen extends StatelessWidget {
                   height: 16,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    color: Colors.purple.shade700,
+                    color: Colors.brown.shade700,
                   ),
                 ),
                 const SizedBox(width: 12),
                 Text(
                   'Refreshing...',
-                  style: TextStyle(color: Colors.purple.shade700),
+                  style: TextStyle(color: Colors.brown.shade700),
                 ),
               ],
             ),
@@ -198,11 +204,11 @@ class PostListScreen extends StatelessWidget {
                       Row(
                         children: [
                           CircleAvatar(
-                            backgroundColor: Colors.purple.shade100,
+                            backgroundColor: Colors.brown.shade100,
                             child: Text(
                               post.title[0].toUpperCase(),
                               style: TextStyle(
-                                color: Colors.purple.shade700,
+                                color: Colors.brown.shade700,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -233,10 +239,7 @@ class PostListScreen extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 12),
-                      Text(
-                        post.body,
-                        style: const TextStyle(fontSize: 14),
-                      ),
+                      Text(post.body, style: const TextStyle(fontSize: 14)),
                       const SizedBox(height: 8),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -246,10 +249,12 @@ class PostListScreen extends StatelessWidget {
                               'Post #${post.id}',
                               style: const TextStyle(fontSize: 12),
                             ),
-                            backgroundColor: Colors.purple.shade50,
+                            backgroundColor: Colors.brown.shade50,
                           ),
                           Text(
-                            DateFormat('MMM dd, yyyy').format(post.publishedDate),
+                            DateFormat(
+                              'MMM dd, yyyy',
+                            ).format(post.publishedDate),
                             style: TextStyle(
                               fontSize: 12,
                               color: Colors.grey.shade600,
@@ -369,7 +374,7 @@ class PostListScreen extends StatelessWidget {
       builder: (context) => AlertDialog(
         title: const Row(
           children: [
-            Icon(Icons.info, color: Colors.purple),
+            Icon(Icons.info, color: Colors.brown),
             SizedBox(width: 8),
             Text('Cubit Pattern'),
           ],

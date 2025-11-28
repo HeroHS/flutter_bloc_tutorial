@@ -25,11 +25,10 @@ import 'product_state.dart';
 class ProductBloc extends Bloc<ProductEvent, ProductState> {
   final GetProducts getProductsUseCase;
 
-  ProductBloc({required this.getProductsUseCase})
-      : super(ProductInitialState()) {
-    on<LoadProductsEvent>(_onLoadProducts);
-    on<AddToCartEvent>(_onAddToCart);
-    on<RemoveFromCartEvent>(_onRemoveFromCart);
+  ProductBloc({required this.getProductsUseCase}) : super(ProductInitial()) {
+    on<ProductLoadedEvent>(_onLoadProducts);
+    on<ProductAddedToCartEvent>(_onAddToCart);
+    on<ProductRemovedFromCartEvent>(_onRemoveFromCart);
   }
 
   /// Handle LoadProductsEvent
@@ -39,16 +38,16 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
   /// 2. Call use case
   /// 3. Emit loaded/error state
   Future<void> _onLoadProducts(
-    LoadProductsEvent event,
+    ProductLoadedEvent event,
     Emitter<ProductState> emit,
   ) async {
-    emit(ProductLoadingState());
+    emit(ProductLoading());
 
     try {
       final products = await getProductsUseCase(NoParams());
-      emit(ProductLoadedState(products));
+      emit(ProductLoaded(products));
     } catch (error) {
-      emit(ProductErrorState(error.toString()));
+      emit(ProductError(error.toString()));
     }
   }
 
@@ -66,15 +65,15 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
   ///    - Product name (for listener snackbar message)
   ///    - addedToCart: true (for listener to show "added" message)
   Future<void> _onAddToCart(
-    AddToCartEvent event,
+    ProductAddedToCartEvent event,
     Emitter<ProductState> emit,
   ) async {
     // Get current products from state
     List<Product> products = [];
-    if (state is ProductLoadedState) {
-      products = (state as ProductLoadedState).products;
-    } else if (state is ProductCartUpdatedState) {
-      products = (state as ProductCartUpdatedState).products;
+    if (state is ProductLoaded) {
+      products = (state as ProductLoaded).products;
+    } else if (state is ProductCartUpdated) {
+      products = (state as ProductCartUpdated).products;
     }
 
     if (products.isNotEmpty) {
@@ -89,11 +88,13 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
       // Emit ProductCartUpdatedState for BlocConsumer
       // Listener will show snackbar
       // Builder will update UI
-      emit(ProductCartUpdatedState(
-        products: updatedProducts,
-        productName: event.productName,
-        addedToCart: true,
-      ));
+      emit(
+        ProductCartUpdated(
+          products: updatedProducts,
+          productName: event.productName,
+          addedToCart: true,
+        ),
+      );
     }
   }
 
@@ -110,15 +111,15 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
   ///    - Product name
   ///    - addedToCart: false (for "removed" message)
   Future<void> _onRemoveFromCart(
-    RemoveFromCartEvent event,
+    ProductRemovedFromCartEvent event,
     Emitter<ProductState> emit,
   ) async {
     // Get current products from state
     List<Product> products = [];
-    if (state is ProductLoadedState) {
-      products = (state as ProductLoadedState).products;
-    } else if (state is ProductCartUpdatedState) {
-      products = (state as ProductCartUpdatedState).products;
+    if (state is ProductLoaded) {
+      products = (state as ProductLoaded).products;
+    } else if (state is ProductCartUpdated) {
+      products = (state as ProductCartUpdated).products;
     }
 
     if (products.isNotEmpty) {
@@ -133,11 +134,13 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
       // Emit ProductCartUpdatedState for BlocConsumer
       // Listener will show snackbar
       // Builder will update UI
-      emit(ProductCartUpdatedState(
-        products: updatedProducts,
-        productName: event.productName,
-        addedToCart: false,
-      ));
+      emit(
+        ProductCartUpdated(
+          products: updatedProducts,
+          productName: event.productName,
+          addedToCart: false,
+        ),
+      );
     }
   }
 }

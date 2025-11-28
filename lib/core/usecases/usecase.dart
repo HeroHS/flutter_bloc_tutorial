@@ -25,7 +25,7 @@
 /// class GetUsers implements UseCase<List<User>, NoParams> {
 ///   final UserRepository repository;
 ///   GetUsers(this.repository);
-///   
+///
 ///   @override
 ///   Future<List<User>> call(NoParams params) async {
 ///     return await repository.getUsers();
@@ -34,7 +34,7 @@
 ///
 /// CALLING FROM BLOC:
 /// final users = await getUsersUseCase(NoParams());
-abstract class UseCase<Type, Params> {
+abstract class UseCase<T, Params> {
   /// Execute the use case
   ///
   /// CALLABLE CLASSES:
@@ -46,7 +46,7 @@ abstract class UseCase<Type, Params> {
   /// - Returns Future<Type> for async operations
   /// - Most use cases involve I/O (network, database) so they're async
   /// - For sync use cases, just return Future.value(result)
-  Future<Type> call(Params params);
+  Future<T> call(Params params);
 }
 
 /// Used for use cases that don't need parameters
