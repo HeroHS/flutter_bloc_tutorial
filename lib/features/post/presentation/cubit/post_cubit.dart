@@ -207,14 +207,20 @@ class PostCubit extends Cubit<PostState> {
   /// - Parameters influence the state emitted
   /// - More flexible than events in some cases
   ///
-  // void searchPosts(String query) {
-  //   emit(PostLoadingState());
-  //   // Filter posts by query
-  //   final filteredPosts = posts.where((p) =>
-  //     p.title.toLowerCase().contains(query.toLowerCase())
-  //   ).toList();
-  //   emit(PostLoadedState(filteredPosts));
-  // }
+  void searchPosts(String query) {
+    // Ensure we have loaded posts to search
+    if (state is! PostLoaded) return;
+
+    // Keep showing current posts while refreshing
+    final currentPosts = (state as PostLoaded).posts;
+
+    emit(PostLoading());
+    // Filter posts by query
+    final filteredPosts = currentPosts
+        .where((p) => p.title.toLowerCase().contains(query.toLowerCase()))
+        .toList();
+    emit(PostLoaded(filteredPosts));
+  }
 
   /// Example: Method that doesn't emit (getter/query)
   ///
@@ -223,14 +229,14 @@ class PostCubit extends Cubit<PostState> {
   /// - Can have helper methods that just return data
   /// - Useful for queries without state changes
   ///
-  // bool hasLoadedPosts() {
-  //   return state is PostLoadedState;
-  // }
-  //
-  // int getPostCount() {
-  //   if (state is PostLoadedState) {
-  //     return (state as PostLoadedState).posts.length;
-  //   }
-  //   return 0;
-  // }
+  bool hasLoadedPosts() {
+    return state is PostLoaded;
+  }
+
+  int getPostCount() {
+    if (state is PostLoaded) {
+      return (state as PostLoaded).posts.length;
+    }
+    return 0;
+  }
 }

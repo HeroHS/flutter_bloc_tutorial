@@ -1,8 +1,12 @@
-# Cubit Tutorial Guide
+# Cubit Tutorial Guide - Posts and Todos Examples
 
 ## 🎯 What is Cubit?
 
 **Cubit** is a lightweight subset of BLoC that allows you to manage state without events. It's simpler, has less boilerplate, and is perfect for straightforward state management scenarios. **Works seamlessly with Clean Architecture** - still uses use cases instead of calling repositories or data sources directly!
+
+This guide covers two Cubit examples:
+- **Posts** - Basic Cubit with BlocBuilder
+- **Todos** - Cubit with BlocConsumer (CRUD operations with side effects)
 
 ## 🏛️ Clean Architecture with Cubit
 

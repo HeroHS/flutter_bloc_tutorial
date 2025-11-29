@@ -45,9 +45,11 @@ import 'features/home/home_screen.dart';
 /// ✓ Independent: UI, Business Logic, and Data are decoupled
 ///
 /// LEARNING PATH:
-/// 1. Start with BLoC example (User) - Understand event-driven pattern
-/// 2. Compare with Cubit example (Post) - See simplified approach
-/// 3. Study the architecture - Understand layer separation
+/// 1. Start with Posts (Cubit) - Understand method-driven approach
+/// 2. Compare with Users (BLoC) - Understand event-driven pattern
+/// 3. Study Todos (Cubit + BlocConsumer) - Learn side effects with Cubit
+/// 4. Explore Products (BLoC + BlocConsumer) - Master complex interactions
+/// 5. Study the architecture - Understand layer separation across all features
 void main() {
   runApp(const MyApp());
 }

@@ -1,16 +1,21 @@
-# 🎯 BlocConsumer Tutorial - Complete Guide
+# 🎯 BlocConsumer Tutorial - Complete Guide (Todo & Product Examples)
+
+This tutorial covers BlocConsumer with two implementations:
+- **Todos** - Cubit with BlocConsumer (simpler CRUD operations)
+- **Products** - BLoC with BlocConsumer (complex shopping cart with events)
 
 ## 📚 Table of Contents
 1. [Introduction](#introduction)
 2. [What is BlocConsumer?](#what-is-blocconsumer)
 3. [When to Use BlocConsumer](#when-to-use-blocconsumer)
-4. [BlocBuilder vs BlocListener vs BlocConsumer](#comparison)
-5. [Basic Usage](#basic-usage)
-6. [Real-World Examples](#real-world-examples)
-7. [Advanced Patterns](#advanced-patterns)
-8. [Best Practices](#best-practices)
-9. [Common Mistakes](#common-mistakes)
-10. [Exercises](#exercises)
+4. [Cubit vs BLoC with BlocConsumer](#cubit-vs-bloc-with-blocconsumer)
+5. [BlocBuilder vs BlocListener vs BlocConsumer](#comparison)
+6. [Basic Usage](#basic-usage)
+7. [Real-World Examples](#real-world-examples)
+8. [Advanced Patterns](#advanced-patterns)
+9. [Best Practices](#best-practices)
+10. [Common Mistakes](#common-mistakes)
+11. [Exercises](#exercises)
 
 ---
 

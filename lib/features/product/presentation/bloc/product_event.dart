@@ -2,7 +2,7 @@
 ///
 /// BLOCCONSUMER EVENTS:
 /// Events now include product name to provide context for snackbar messages.
-/// The BLoC uses this to emit ProductCartUpdatedState with proper information.
+/// The BLoC uses this to emit ProductCartUpdated with proper information.
 sealed class ProductEvent {}
 
 /// Event to load products from the data source
@@ -18,12 +18,12 @@ final class ProductLoadedEvent extends ProductEvent {}
 /// ADD TO CART EVENT:
 /// - Requires productId to identify which product
 /// - Requires productName for snackbar message
-/// - Emits: ProductCartUpdatedState (addedToCart: true)
+/// - Emits: ProductCartUpdated (addedToCart: true)
 ///
 /// BLOCCONSUMER FLOW:
 /// 1. User taps "Add to Cart"
 /// 2. Event dispatched: ProductAddedToCart(id, name)
-/// 3. BLoC updates product and emits ProductCartUpdatedState
+/// 3. BLoC updates product and emits ProductCartUpdated
 /// 4. Listener shows: "{productName} added to cart!"
 /// 5. Builder rebuilds UI with updated cart icon
 final class ProductAddedToCartEvent extends ProductEvent {
@@ -38,12 +38,12 @@ final class ProductAddedToCartEvent extends ProductEvent {
 /// REMOVE FROM CART EVENT:
 /// - Requires productId to identify which product
 /// - Requires productName for snackbar message
-/// - Emits: ProductCartUpdatedState (addedToCart: false)
+/// - Emits: ProductCartUpdated (addedToCart: false)
 ///
 /// BLOCCONSUMER FLOW:
 /// 1. User taps "Remove from Cart"
 /// 2. Event dispatched: ProductRemovedFromCart(id, name)
-/// 3. BLoC updates product and emits ProductCartUpdatedState
+/// 3. BLoC updates product and emits ProductCartUpdated
 /// 4. Listener shows: "{productName} removed from cart"
 /// 5. Builder rebuilds UI with updated cart icon
 final class ProductRemovedFromCartEvent extends ProductEvent {

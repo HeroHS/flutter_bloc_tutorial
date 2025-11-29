@@ -18,11 +18,11 @@ import '../../domain/entities/post.dart';
 /// BlocBuilder<PostCubit, PostState>(
 ///   builder: (context, state) {
 ///     return switch (state) {
-///       PostInitialState() => WelcomeView(),
-///       PostLoadingState() => LoadingSpinner(),
-///       PostLoadedState() => PostsList(state.posts),
-///       PostErrorState() => ErrorView(state.errorMessage),
-///       PostRefreshingState() => PostsList(state.currentPosts), // Shows old data
+///       PostInitial() => WelcomeView(),
+///       PostLoading() => LoadingSpinner(),
+///       PostLoaded() => PostsList(state.posts),
+///       PostError() => ErrorView(state.errorMessage),
+///       PostRefreshing() => PostsList(state.currentPosts), // Shows old data
 ///     };
 ///   },
 /// )
@@ -31,7 +31,7 @@ sealed class PostState {}
 /// Initial state before any data loading has occurred
 ///
 /// WHEN EMITTED:
-/// - Cubit constructor: super(PostInitialState())
+/// - Cubit constructor: super(PostInitial())
 /// - After calling clear() or reset() methods
 /// - Before user triggers any data loading
 final class PostInitial extends PostState {}
@@ -62,7 +62,7 @@ final class PostLoading extends PostState {}
 ///
 /// IMMUTABILITY:
 /// - The List<Post> is final
-/// - To update, emit new PostLoadedState with new list
+/// - To update, emit new PostLoaded with new list
 final class PostLoaded extends PostState {
   final List<Post> posts;
 
@@ -103,8 +103,8 @@ final class PostError extends PostState {
 /// - Don't block entire screen with loading spinner
 ///
 /// TRANSITION:
-/// PostLoadedState → PostRefreshingState → PostLoadedState (new data)
-///                                       → PostLoadedState (old data on error)
+/// PostLoaded → PostRefreshing → PostLoaded (new data)
+///                             → PostLoaded (old data on error)
 ///
 /// PATTERN USAGE:
 /// This demonstrates you can have as many states as needed!

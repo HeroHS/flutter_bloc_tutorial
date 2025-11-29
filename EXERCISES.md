@@ -1,13 +1,15 @@
-# BLoC Tutorial - Practice Exercises
+# Flutter BLoC Tutorial - Practice Exercises
 
-Complete these exercises to deepen your understanding of the BLoC pattern!
+Complete these exercises to deepen your understanding of BLoC, Cubit, and BlocConsumer patterns across all four features!
 
-## 🎯 Exercise 1: Add a Refresh Button (Easy)
+## 🎯 BLoC Pattern Exercises (User Feature)
+
+## 🎯 Exercise 1: Add a Refresh Button to User Screen (Easy - BLoC)
 
 **Goal**: Add a refresh button to the app bar that reloads the user list.
 
 **Steps**:
-1. Open `lib/screens/user_list_screen.dart`
+1. Open `lib/features/user/presentation/screens/user_list_screen.dart`
 2. Add a refresh icon button to the `AppBar` actions
 3. When clicked, dispatch a `LoadUsersEvent`
 4. Test that it works in both success and error states
@@ -26,7 +28,7 @@ IconButton(
 
 ---
 
-## 🎯 Exercise 2: Add User Count Display (Easy)
+## 🎯 Exercise 2: Add User Count Display (Easy - BLoC)
 
 **Goal**: Show the total number of users in the loaded state.
 
@@ -39,14 +41,14 @@ IconButton(
 
 ---
 
-## 🎯 Exercise 3: Customize Loading Message (Easy)
+## 🎯 Exercise 3: Customize Loading Message (Easy - Data Layer)
 
 **Goal**: Change the loading delay and update the message.
 
 **Steps**:
-1. Open `lib/services/user_api_service.dart`
+1. Open `lib/features/user/data/datasources/user_remote_datasource.dart`
 2. Change the delay from 2 seconds to 3 seconds
-3. Update the loading message to reflect the new delay
+3. Update the loading message in the UI to reflect the new delay
 4. Run the app and verify the change
 
 **Learning Objective**: Understand how services affect UI state
@@ -236,16 +238,233 @@ RefreshIndicator(
 
 After completing exercises, you should be able to:
 
+**BLoC Pattern (Users)**
 - [ ] Create events, states, and BLoCs from scratch
 - [ ] Dispatch events from UI components
 - [ ] Build UI based on different states
 - [ ] Handle loading, success, and error states
 - [ ] Use BlocProvider and BlocBuilder correctly
+
+**Cubit Pattern (Posts)**
+- [ ] Create Cubits with direct methods (no events)
+- [ ] Call Cubit methods from UI
+- [ ] Implement refresh patterns with Cubit
+- [ ] Understand when to use Cubit vs BLoC
+
+**Cubit with BlocConsumer (Todos)**
+- [ ] Use BlocConsumer for side effects with Cubit
+- [ ] Implement dual state emission pattern
+- [ ] Show snackbars for user actions
+- [ ] Handle CRUD operations with user feedback
+
+**BLoC with BlocConsumer (Products)**
+- [ ] Combine BLoC events with BlocConsumer
+- [ ] Implement complex interactions with haptic feedback
 - [ ] Work with multiple BLoCs in one app
-- [ ] Implement side effects with BlocListener
-- [ ] Test BLoCs in isolation
+- [ ] Implement side effects with listener
+- [ ] Test BLoCs/Cubits in isolation
 - [ ] Debug state transitions
 - [ ] Apply best practices for BLoC architecture
+
+---
+
+## 🎯 Cubit Pattern Exercises (Post Feature)
+
+### Exercise 13: Add Post Categories (Easy - Cubit)
+
+**Goal**: Add category filtering to posts.
+
+**Steps**:
+1. Open `lib/features/post/domain/entities/post.dart`
+2. Add a `category` field to Post entity
+3. Update PostModel with the new field
+4. Add `filterByCategory(String category)` method to PostCubit
+5. Create a category dropdown in the UI
+
+**Learning Objective**: Cubit methods with parameters
+
+---
+
+### Exercise 14: Implement Post Search (Medium - Cubit)
+
+**Goal**: Add search functionality to posts.
+
+**Steps**:
+1. Add `searchPosts(String query)` method to PostCubit
+2. Create PostSearchingState to show search results
+3. Add search TextField in UI
+4. Filter posts by title and body
+5. Show "No results found" message
+
+**Learning Objective**: State management with Cubit methods
+
+---
+
+### Exercise 15: Add Post Detail View (Medium - Cubit)
+
+**Goal**: Create a detail screen for posts.
+
+**Steps**:
+1. Create `post_detail_screen.dart`
+2. Create PostDetailCubit with `loadPostById(int id)` method
+3. Show post details with formatted content
+4. Add related posts section
+5. Use BlocProvider for the detail screen
+
+**Learning Objective**: Multiple Cubits in navigation
+
+---
+
+## 🎯 Cubit with BlocConsumer Exercises (Todo Feature)
+
+### Exercise 16: Add Todo Priorities (Easy - BlocConsumer)
+
+**Goal**: Add priority levels to todos.
+
+**Steps**:
+1. Add `priority` enum (Low, Medium, High) to Todo entity
+2. Update TodoModel and data source
+3. Show priority with colored badges
+4. Add priority selector when adding todos
+5. Show snackbar with priority when added
+
+**Learning Objective**: Enhanced data with BlocConsumer feedback
+
+---
+
+### Exercise 17: Add Todo Categories (Medium - BlocConsumer)
+
+**Goal**: Categorize todos (Work, Personal, Shopping).
+
+**Steps**:
+1. Add `category` field to Todo
+2. Add `filterByCategory(String category)` to TodoCubit
+3. Create category tabs in UI
+4. Show category in snackbar messages
+5. Emit TodoFiltered state with listenWhen
+
+**Learning Objective**: Complex filtering with action states
+
+---
+
+### Exercise 18: Add Todo Due Dates (Hard - BlocConsumer)
+
+**Goal**: Add due dates with notifications.
+
+**Steps**:
+1. Add `dueDate` field to Todo
+2. Add date picker when creating todo
+3. Emit TodoDueDateSet state with snackbar
+4. Highlight overdue todos in red
+5. Sort by due date
+6. Show haptic feedback for overdue items
+
+**Learning Objective**: Advanced BlocConsumer with complex states
+
+---
+
+## 🎯 BLoC with BlocConsumer Exercises (Product Feature)
+
+### Exercise 19: Add Product Favorites (Easy - BlocConsumer)
+
+**Goal**: Let users favorite products.
+
+**Steps**:
+1. Add `isFavorite` to Product entity
+2. Create ToggleFavoriteEvent
+3. Add ProductFavoritedState with timestamp
+4. Show yellow heart icon for favorites
+5. Emit snackbar: "Added to favorites!"
+6. Add haptic feedback
+
+**Learning Objective**: Additional actions with BlocConsumer
+
+---
+
+### Exercise 20: Add Cart Quantity (Medium - BlocConsumer)
+
+**Goal**: Allow multiple quantities in cart.
+
+**Steps**:
+1. Add `quantity` to Product
+2. Create IncrementCartEvent and DecrementCartEvent
+3. Show quantity badge on products
+4. Update ProductCartUpdatedState with quantity change
+5. Show snackbar: "Quantity increased to 3"
+6. Add strong haptic for max quantity
+
+**Learning Objective**: Complex state with multiple fields
+
+---
+
+### Exercise 21: Add Checkout Flow (Hard - BlocConsumer)
+
+**Goal**: Complete checkout with confirmation.
+
+**Steps**:
+1. Create CheckoutConfirmedState after CheckoutState
+2. Navigate to checkout screen on CheckoutState
+3. Show order summary
+4. Add ConfirmOrderEvent
+5. Emit ProductOrderCompletedState with timestamp
+6. Show success snackbar and haptic
+7. Clear cart and return to product list
+
+**Learning Objective**: Multi-step flow with navigation and BlocConsumer
+
+---
+
+## 🏆 Advanced Cross-Feature Challenges
+
+### Challenge E: Unified Search Across Features
+- Search across Users, Posts, Todos, and Products
+- Create SearchBloc with multiple repositories
+- Show results grouped by feature
+- Navigate to detail screens
+
+### Challenge F: Shopping List from Todos
+- Convert todos to shopping list
+- Add products from product list to todos
+- Sync cart items with todo completion
+- Use multiple BlocConsumers
+
+### Challenge G: User Activity Dashboard
+- Show user's posts, todos, and cart
+- Real-time updates across features
+- Use StreamBuilder with multiple Cubits/BLoCs
+- Coordinate state across features
+
+### Challenge H: Export/Import Data
+- Export users, posts, todos, products to JSON
+- Import from JSON files
+- Show progress with BlocConsumer
+- Handle errors gracefully
+
+---
+
+## 🎓 Pattern Comparison Exercise
+
+**Exercise 22: Implement Same Feature in All Four Patterns**
+
+**Goal**: Understand the differences by implementing "Comments" feature in four ways:
+
+1. **Comments with BLoC (like Users)**
+   - Create CommentEvent, CommentState, CommentBloc
+   - Use traditional event-driven approach
+   
+2. **Comments with Cubit (like Posts)**
+   - Create CommentCubit with direct methods
+   - No events needed
+   
+3. **Comments with Cubit + BlocConsumer (like Todos)**
+   - Add/edit/delete comments with snackbars
+   - Use action states for feedback
+   
+4. **Comments with BLoC + BlocConsumer (like Products)**
+   - Like/unlike comments with haptic feedback
+   - Complex interactions with events
+
+**Learning Objective**: Master all four patterns by comparing implementations
 
 ---
 

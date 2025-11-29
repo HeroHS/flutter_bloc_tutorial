@@ -9,12 +9,12 @@ import 'product_state.dart';
 ///
 /// BLOCCONSUMER IMPLEMENTATION:
 /// This BLoC is designed to work with BlocConsumer by:
-/// 1. Emitting ProductCartUpdatedState when cart changes
+/// 1. Emitting ProductCartUpdated when cart changes
 /// 2. Including product name and action in the state
 /// 3. Allowing listener to show appropriate feedback
 ///
 /// KEY DIFFERENCE FROM STANDARD BLOC:
-/// - Emits ProductCartUpdatedState (not ProductLoadedState) for cart changes
+/// - Emits ProductCartUpdated (not ProductLoaded) for cart changes
 /// - Includes metadata (productName, addedToCart) for listener
 /// - Enables rich user feedback through snackbars
 ///
@@ -54,13 +54,13 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
   /// Handle AddToCartEvent
   ///
   /// BLOCCONSUMER PATTERN:
-  /// Emits ProductCartUpdatedState instead of ProductLoadedState.
+  /// Emits ProductCartUpdated instead of ProductLoaded.
   /// This allows the listener to detect the change and show a snackbar.
   ///
   /// FLOW:
-  /// 1. Check if we have loaded products (ProductLoadedState or ProductCartUpdatedState)
+  /// 1. Check if we have loaded products (ProductLoaded or ProductCartUpdated)
   /// 2. Find the product by ID and update inCart to true
-  /// 3. Emit ProductCartUpdatedState with:
+  /// 3. Emit ProductCartUpdated with:
   ///    - Updated products list (for builder to display)
   ///    - Product name (for listener snackbar message)
   ///    - addedToCart: true (for listener to show "added" message)
@@ -85,7 +85,7 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
         return product;
       }).toList();
 
-      // Emit ProductCartUpdatedState for BlocConsumer
+      // Emit ProductCartUpdated for BlocConsumer
       // Listener will show snackbar
       // Builder will update UI
       emit(
@@ -106,7 +106,7 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
   /// FLOW:
   /// 1. Get current products from state
   /// 2. Find the product by ID and update inCart to false
-  /// 3. Emit ProductCartUpdatedState with:
+  /// 3. Emit ProductCartUpdated with:
   ///    - Updated products list
   ///    - Product name
   ///    - addedToCart: false (for "removed" message)
@@ -131,7 +131,7 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
         return product;
       }).toList();
 
-      // Emit ProductCartUpdatedState for BlocConsumer
+      // Emit ProductCartUpdated for BlocConsumer
       // Listener will show snackbar
       // Builder will update UI
       emit(

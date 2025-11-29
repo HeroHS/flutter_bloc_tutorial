@@ -1,8 +1,8 @@
-# 🎓 Flutter BLoC Tutorial - Complete Package (Clean Architecture + Three Patterns)
+# 🎓 Flutter BLoC Tutorial - Complete Package (Clean Architecture + Four Examples)
 
 ## 📦 What's Included
 
-This comprehensive tutorial package includes everything you need to master **Clean Architecture** with **three** state management patterns in Flutter: BLoC (event-driven), Cubit (method-driven), and BlocConsumer (builder + listener)!
+This comprehensive tutorial package includes everything you need to master **Clean Architecture** with **BLoC and Cubit patterns** in Flutter through **four feature examples**: Users (BLoC), Posts (Cubit), Todos (Cubit with BlocConsumer), and Products (BLoC with BlocConsumer)!
 
 ### 📁 Project Structure (Clean Architecture)
 
@@ -92,12 +92,12 @@ flutter_bloc_tutorial/
 │   │
 │   └── main.dart                     # App entry point
 │
-├── ARCHITECTURE.md                   # Flow diagrams (all 3 patterns)
-├── QUICK_REFERENCE.md                # Code snippets (all 3 patterns)
+├── ARCHITECTURE.md                   # Flow diagrams (all 4 examples)
+├── QUICK_REFERENCE.md                # Code snippets (all patterns)
 ├── CUBIT_GUIDE.md                    # Cubit vs BLoC deep dive
 ├── BLOC_CONSUMER_TUTORIAL.md         # BlocConsumer complete guide
 ├── BLOCCONSUMER_IMPLEMENTATION_COMPLETE.md # Implementation details
-├── EXERCISES.md                      # Practice (all 3 patterns)
+├── EXERCISES.md                      # Practice (all patterns)
 ├── BEGINNERS_GUIDE.dart              # Step-by-step explanation
 ├── README.md                         # Main documentation
 └── pubspec.yaml                      # Dependencies

@@ -1,8 +1,14 @@
-# Clean Architecture + State Management - BLoC, Cubit & BlocConsumer
+# Clean Architecture + State Management - BLoC and Cubit with Four Examples
 
 ## Overview
 
-This tutorial demonstrates **Clean Architecture** with **three state management patterns**: BLoC (event-driven), Cubit (method-driven), and BlocConsumer (builder + listener). All patterns follow Clean Architecture principles with proper layer separation.
+This tutorial demonstrates **Clean Architecture** with **BLoC and Cubit patterns** through **four feature examples**: 
+1. **Users** - BLoC Pattern (event-driven)
+2. **Posts** - Cubit Pattern (method-driven)
+3. **Todos** - Cubit with BlocConsumer (CRUD with side effects)
+4. **Products** - BLoC with BlocConsumer (shopping cart with complex interactions)
+
+All patterns follow Clean Architecture principles with proper layer separation.
 
 ## Clean Architecture Layers
 
@@ -408,7 +414,7 @@ BlocProvider(
 
 ---
 
-### Cubit Pattern Components
+### Cubit Pattern (Post Example with Clean Architecture)
 
 #### 1. No Events!
 Cubit doesn't use events - methods are called directly
@@ -447,7 +453,62 @@ BlocProvider(
 
 ---
 
-### BlocConsumer Pattern Components (Product Demo)
+### Cubit with BlocConsumer Pattern (Todo Example)
+
+#### 1. No Events!
+Cubit doesn't use events - methods are called directly
+
+#### 2. States (todo_state.dart)
+- **TodoInitial**: Starting state
+- **TodoLoading**: Data is being fetched
+- **TodoLoaded**: Todos loaded successfully (contains todo entities)
+- **TodoAdded**: Todo added (action state with timestamp, triggers listener)
+- **TodoToggled**: Todo toggled (action state with timestamp, triggers listener)
+- **TodoDeleted**: Todo deleted (action state with timestamp, triggers listener)
+- **TodoError**: Error occurred
+
+#### 3. Cubit Methods (todo_cubit.dart)
+The `TodoCubit` class provides direct methods:
+- `loadTodos()` - Load todos from data source via GetTodos use case
+- `addTodo(title)` - Add new todo via AddTodo use case
+- `toggleTodo(id)` - Toggle todo completion via ToggleTodo use case
+- `deleteTodo(id)` - Delete todo via DeleteTodo use case
+- `retry()` - Retry after error
+
+#### 4. BlocConsumer (todo_list_screen.dart)
+- **Listener**: Handles side effects
+  - Snackbars for add/toggle/delete actions
+  - Uses `clearSnackBars()` to prevent queue issues
+- **Builder**: Handles UI rendering
+  - Todo list with checkboxes
+  - Loading states
+  - Error states with retry
+- **listenWhen**: Optimizes when listener fires
+  ```dart
+  listenWhen: (previous, current) {
+    return current is TodoAdded ||
+        current is TodoToggled ||
+        current is TodoDeleted ||
+        current is TodoError;
+  }
+  ```
+
+#### 5. Dual State Emission Pattern (Cubit Version)
+```dart
+void addTodo(String title) {
+  // ... add todo logic ...
+  
+  // Step 1: Emit action state (triggers listener for snackbar)
+  emit(TodoAdded(..., timestamp: DateTime.now()));
+  
+  // Step 2: Emit loaded state (updates UI, ready for next action)
+  emit(TodoLoaded(...));
+}
+```
+
+---
+
+### BLoC with BlocConsumer Pattern (Product Example - Shopping Cart)
 
 #### 1. Events (product_event.dart)
 - **LoadProductsEvent**: Load products successfully

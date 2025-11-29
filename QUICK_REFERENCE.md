@@ -1,6 +1,16 @@
-# BLoC Quick Reference Guide
+# BLoC & Cubit Quick Reference Guide
 
-## 📋 Common Patterns & Snippets
+## 📋 Common Patterns & Snippets for All Four Examples
+
+This guide covers BLoC, Cubit, and BlocConsumer patterns used in:
+- **Users** - BLoC Pattern
+- **Posts** - Cubit Pattern  
+- **Todos** - Cubit with BlocConsumer
+- **Products** - BLoC with BlocConsumer
+
+---
+
+## 🎯 BLoC Pattern (Users Example)
 
 ### 1. Creating a New Event
 

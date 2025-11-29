@@ -1,14 +1,18 @@
-# BlocConsumer Implementation Complete
+# BlocConsumer Implementation Complete - Todo & Product Features
 
 ## Summary
 
-Successfully refactored the Product feature to properly demonstrate the **BlocConsumer** pattern according to the tutorial specifications.
+This document covers the **BlocConsumer** pattern implementation in two features:
+1. **Todo Feature** - Cubit with BlocConsumer (simpler CRUD operations)
+2. **Product Feature** - BLoC with BlocConsumer (complex shopping cart interactions)
 
 ## What is BlocConsumer?
 
 BlocConsumer combines **BlocListener** and **BlocBuilder** into a single widget, allowing you to:
 - **Listen** to state changes for side effects (snackbars, dialogs, navigation)
 - **Build** UI based on state changes (display widgets)
+
+Both features demonstrate this pattern but with different state management approaches:
 
 ## Changes Made
 

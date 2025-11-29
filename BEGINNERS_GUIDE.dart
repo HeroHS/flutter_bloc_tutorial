@@ -3,7 +3,14 @@
  * FLUTTER BLOC TUTORIAL - BEGINNER'S GUIDE
  * ============================================================================
  * 
- * This file provides a step-by-step explanation of how BLoC works in this app.
+ * This file provides a step-by-step explanation of how BLoC and Cubit work
+ * across FOUR feature examples in this app:
+ * 
+ * 1. Users - BLoC Pattern (event-driven)
+ * 2. Posts - Cubit Pattern (method-driven)
+ * 3. Todos - Cubit with BlocConsumer (CRUD with side effects)
+ * 4. Products - BLoC with BlocConsumer (shopping cart with complex interactions)
+ * 
  * Follow along with the actual code files while reading this guide.
  * 
  * ============================================================================
@@ -11,27 +18,80 @@
 
 /*
  * ----------------------------------------------------------------------------
- * STEP 1: Understanding the User Model (lib/models/user.dart)
+ * CLEAN ARCHITECTURE OVERVIEW
  * ----------------------------------------------------------------------------
  * 
- * The User model represents the data structure we get from our API.
+ * All four features follow Clean Architecture with three layers:
  * 
- * Think of it as a blueprint for user data:
- * - id: Unique identifier for each user
- * - name: User's full name
- * - email: User's email address
- * - role: User's job role
+ * 1. DOMAIN LAYER (Business Logic)
+ *    - Entities: Pure business objects (User, Post, Todo, Product)
+ *    - Use Cases: Business operations (GetUsers, AddTodo, etc.)
+ *    - Repository Interfaces: Data contracts
+ *    - No dependencies on other layers!
  * 
- * Why we need this:
- * - Type safety: Dart knows what fields exist
- * - Easy to work with: Use user.name instead of user['name']
- * - Reusable: Can use this model across the entire app
+ * 2. DATA LAYER (Data Access)
+ *    - Data Sources: API/Database access
+ *    - Models: DTOs with JSON serialization (extends entities)
+ *    - Repository Implementations: Concrete implementations
+ * 
+ * 3. PRESENTATION LAYER (UI + State Management)
+ *    - BLoC/Cubit: State management
+ *    - Screens: UI widgets
+ *    - States: UI state representations
+ *    - Events: User actions (BLoC only)
+ * 
+ * FLOW: Presentation → Domain (Use Cases) ← Data
  */
 
 /*
  * ----------------------------------------------------------------------------
- * STEP 2: Understanding Events (lib/bloc/user_event.dart)
+ * STEP 1: Understanding Entities vs Models
  * ----------------------------------------------------------------------------
+ * 
+ * ENTITY (Domain Layer):
+ * - Pure business object
+ * - No JSON, no framework dependencies
+ * - Example: lib/features/user/domain/entities/user.dart
+ * 
+ * MODEL (Data Layer):
+ * - Extends entity
+ * - Adds JSON serialization
+ * - Example: lib/features/user/data/models/user_model.dart
+ * 
+ * Why separate?
+ * - Domain layer stays pure (no external dependencies)
+ * - Can change data format without affecting business logic
+ * - Easy to test domain logic independently
+ */
+
+/*
+ * ----------------------------------------------------------------------------
+ * STEP 2: Understanding Use Cases
+ * ----------------------------------------------------------------------------
+ * 
+ * Use Cases encapsulate business operations:
+ * - GetUsers, GetPosts, AddTodo, ToggleTodo, etc.
+ * - Single responsibility per use case
+ * - Called by BLoC/Cubit, NOT UI directly
+ * 
+ * Example: lib/features/user/domain/usecases/get_users.dart
+ * 
+ * Flow:
+ * BLoC/Cubit → Use Case → Repository Interface → Repository Impl → Data Source
+ * 
+ * Why use cases?
+ * - Isolate business logic from UI
+ * - Reusable across different UIs
+ * - Easy to test
+ * - Single Responsibility Principle
+ */
+
+/*
+ * ----------------------------------------------------------------------------
+ * STEP 3: BLoC PATTERN - Events (Users Example)
+ * ----------------------------------------------------------------------------
+ * 
+ * Location: lib/features/user/presentation/bloc/user_event.dart
  * 
  * Events are like "messages" that tell the BLoC what the user wants to do.
  * 
@@ -51,8 +111,10 @@
 
 /*
  * ----------------------------------------------------------------------------
- * STEP 3: Understanding States (lib/bloc/user_state.dart)
+ * STEP 4: BLoC PATTERN - States (Users Example)
  * ----------------------------------------------------------------------------
+ * 
+ * Location: lib/features/user/presentation/bloc/user_state.dart
  * 
  * States represent the CURRENT CONDITION of the app.
  * 
@@ -72,31 +134,7 @@
  * - No "oops I forgot to handle the error state"
  */
 
-/*
- * ----------------------------------------------------------------------------
- * STEP 4: Understanding the API Service (lib/services/user_api_service.dart)
- * ----------------------------------------------------------------------------
- * 
- * The API service simulates talking to a real server.
- * 
- * In a real app:
- * - This would use http package to call REST APIs
- * - Would handle actual network requests
- * - Would parse JSON responses
- * 
- * In this tutorial:
- * - We use Future.delayed to simulate network delay
- * - We return hardcoded mock data
- * - We can simulate both success and failure
- * 
- * Why separate this from BLoC?
- * - BLoC focuses on business logic
- * - Service focuses on data fetching
- * - Easy to swap with real API later
- * - Easy to test each part separately
- */
-
-/*
+/* 
  * ----------------------------------------------------------------------------
  * STEP 5: Understanding the BLoC (lib/bloc/user_bloc.dart)
  * ----------------------------------------------------------------------------

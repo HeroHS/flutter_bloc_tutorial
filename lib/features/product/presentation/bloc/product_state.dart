@@ -3,7 +3,7 @@ import '../../domain/entities/product.dart';
 /// Base class for all Product-related states
 ///
 /// BLOCCONSUMER STATES:
-/// The ProductCartUpdatedState is specifically designed for BlocConsumer:
+/// The ProductCartUpdated is specifically designed for BlocConsumer:
 /// - Listener detects it and shows snackbar
 /// - Builder uses it to rebuild the UI
 ///
@@ -50,12 +50,12 @@ final class ProductLoaded extends ProductState {
 ///
 /// BLOCCONSUMER USAGE:
 /// listener: (context, state) {
-///   if (state is ProductCartUpdatedState) {
+///   if (state is ProductCartUpdated) {
 ///     // Show snackbar with state.productName
 ///   }
 /// }
 /// builder: (context, state) {
-///   if (state is ProductCartUpdatedState) {
+///   if (state is ProductCartUpdated) {
 ///     // Display state.products
 ///   }
 /// }

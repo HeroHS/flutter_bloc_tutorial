@@ -1,19 +1,20 @@
-# Flutter BLoC Tutorial - Clean Architecture + Three State Management Patterns
+# Flutter BLoC Tutorial - Clean Architecture + Four State Management Patterns
 
-A comprehensive tutorial application demonstrating **Clean Architecture** with **three state management patterns**: BLoC (event-driven), Cubit (method-driven), and BlocConsumer (builder + listener) using `flutter_bloc` to manage state when loading data from an API.
+A comprehensive tutorial application demonstrating **Clean Architecture** with **four feature examples** using **BLoC** and **Cubit** patterns: BLoC (event-driven), Cubit (method-driven), Cubit with BlocConsumer (listener + builder), and BLoC with BlocConsumer using `flutter_bloc` to manage state when loading data from an API.
 
 ## 📚 What You'll Learn
 
 This tutorial demonstrates:
 - ✅ **Clean Architecture**: Separation of concerns with Domain, Data, and Presentation layers
-- ✅ **BLoC Pattern**: Event-driven architecture with events and states (User demo)
-- ✅ **Cubit Pattern**: Simplified approach with direct method calls - no events (Post demo)
-- ✅ **BlocConsumer Pattern**: Combined builder and listener for side effects (Product demo)
+- ✅ **BLoC Pattern**: Event-driven architecture with events and states (User example)
+- ✅ **Cubit Pattern**: Simplified approach with direct method calls - no events (Post example)
+- ✅ **Cubit with BlocConsumer**: Combined builder and listener for side effects (Todo example)
+- ✅ **BLoC with BlocConsumer**: Event-driven with side effects (Product example)
 - ✅ **Use Cases**: Business logic isolation from presentation and data layers
 - ✅ **Repository Pattern**: Abstract data access with concrete implementations
 - ✅ **Entities vs Models**: Pure domain objects vs data transfer objects
 - ✅ Managing different UI states (Initial, Loading, Success, Error, Refreshing)
-- ✅ Dual state emission pattern for repeated actions (BlocConsumer)
+- ✅ Dual state emission pattern for repeated actions (BlocConsumer examples)
 - ✅ Side effects: Snackbars, navigation, haptic feedback
 - ✅ Simulating API calls with `Future.delayed`
 - ✅ Handling errors gracefully with retry logic and Failure classes
@@ -225,10 +226,11 @@ The `PostCubit` class provides direct methods:
 - `refreshPosts()` - Refresh with optimistic update
 - `clear()` - Reset to initial state
 
-### BlocConsumer Pattern (Product Example - Shopping Cart)
+### BlocConsumer Pattern (Todo and Product Examples)
 
 #### Clean Architecture Integration
-- **ProductBloc** (Presentation) → **GetProducts** (Domain) → **ProductRepository** (Domain interface) → **ProductRepositoryImpl** (Data) → **ProductRemoteDataSource** (Data)
+- **Todo Example (Cubit)**: TodoCubit → GetTodos/AddTodo/ToggleTodo/DeleteTodo → TodoRepository → TodoRepositoryImpl → TodoRemoteDataSource
+- **Product Example (BLoC)**: ProductBloc → GetProducts → ProductRepository → ProductRepositoryImpl → ProductRemoteDataSource
 
 #### 1. What is BlocConsumer?
 BlocConsumer **combines** `BlocBuilder` and `BlocListener` into one widget:
@@ -306,20 +308,19 @@ The builder handles UI rendering:
 
 ## 🔍 Pattern Comparison
 
-| Feature | BLoC (User) | Cubit (Post) | BlocConsumer (Product) |
-|---------|-------------|--------------|------------------------|
-| **Events** | Required (3) | Not needed | Required (7) |
-| **States** | 4 states | 5 states | 8 states |
-| **How to trigger** | `bloc.add(Event())` | `cubit.method()` | `bloc.add(Event())` |
-| **Side Effects** | Separate BlocListener | Separate BlocListener | Built-in listener |
-| **UI Updates** | BlocBuilder | BlocBuilder | Built-in builder |
-| **Boilerplate** | Medium | Low (-40%) | High (richer UX) |
-| **Use case** | CRUD operations | Simple lists | Shopping carts, forms |
-| **Files needed** | 3 (bloc, events, states) | 2 (cubit, states) | 3 (bloc, events, states) |
-| **Lines of Code** | ~400 | ~350 | ~750 |
-| **User Feedback** | Manual | Manual | Integrated (snackbars, haptics) |
-| **Learning curve** | Medium | Low | High |
-| **When to use** | Standard features | Prototyping | Features needing feedback |
+| Feature | BLoC (User) | Cubit (Post) | Cubit + BlocConsumer (Todo) | BLoC + BlocConsumer (Product) |
+|---------|-------------|--------------|----------------------------|-------------------------------|
+| **Events** | Required | Not needed | Not needed | Required |
+| **States** | 4 states | 5 states | Action states | Action states |
+| **How to trigger** | `bloc.add(Event())` | `cubit.method()` | `cubit.method()` | `bloc.add(Event())` |
+| **Side Effects** | Separate BlocListener | Separate BlocListener | Built-in listener | Built-in listener |
+| **UI Updates** | BlocBuilder | BlocBuilder | Built-in builder | Built-in builder |
+| **Boilerplate** | Medium | Low (-40%) | Medium | High |
+| **Use case** | CRUD operations | Simple lists | Todo lists, CRUD | Shopping carts |
+| **Files needed** | 3 (bloc, events, states) | 2 (cubit, states) | 2 (cubit, states) | 3 (bloc, events, states) |
+| **User Feedback** | Manual | Manual | Integrated snackbars | Integrated snackbars/haptics |
+| **Learning curve** | Medium | Low | Medium | High |
+| **When to use** | Standard features | Prototyping | Interactive CRUD | Complex interactions |
 
 ## 🚀 How to Run
 
@@ -337,10 +338,11 @@ The builder handles UI rendering:
 ## 🎮 Using the App
 
 ### Home Screen
-When you launch, you'll see three demo options:
-1. **BLoC Pattern** - Event-driven architecture (User example)
-2. **Cubit Pattern** - Direct method calls (Post example)
-3. **BlocConsumer Demo** - Shopping cart with side effects (Product example)
+When you launch, you'll see four demo options:
+1. **Posts** - Cubit Pattern (simple method calls)
+2. **Users** - BLoC Pattern (event-driven architecture)
+3. **Todos** - Cubit with BlocConsumer (CRUD with side effects)
+4. **Products** - BLoC with BlocConsumer (shopping cart with haptic feedback)
 
 ### BLoC Pattern Tutorial (User List)
 1. **Initial State**: Welcome screen with two buttons
@@ -363,7 +365,21 @@ When you launch, you'll see three demo options:
 4. **Refresh Button**: In app bar - demonstrates advanced refresh pattern
 5. **Info Button**: Tap for Cubit pattern information
 
-### BlocConsumer Demo (Product List - Shopping Cart)
+### Cubit with BlocConsumer Tutorial (Todo List)
+1. **Initial Load**: Todos load automatically on screen open
+2. **Add Todo**: Tap the floating action button
+   - ✅ Green snackbar appears: "Todo added successfully!"
+   - ✅ New todo appears in the list
+3. **Toggle Todo**: Tap a todo item to mark complete/incomplete
+   - ✅ Snackbar shows status change
+   - ✅ Checkbox updates
+4. **Delete Todo**: Swipe to delete a todo
+   - ✅ Orange snackbar appears: "Todo deleted"
+   - ✅ Todo removed from list
+5. **Error Handling**: Test error scenarios
+6. **Info Button**: Tap for BlocConsumer pattern explanation with Cubit
+
+### BLoC with BlocConsumer Demo (Product List - Shopping Cart)
 1. **Initial Load**: Products load automatically on screen open
 2. **Add to Cart**: Tap the cart icon on any product
    - ✅ Green snackbar appears: "Product added to cart!"
@@ -379,7 +395,7 @@ When you launch, you'll see three demo options:
    - ✅ Strong haptic feedback
 5. **Pull to Refresh**: Drag down to refresh product list
 6. **Error Handling**: Use app bar menu to trigger error scenario
-7. **Info Button**: Tap for BlocConsumer pattern explanation
+7. **Info Button**: Tap for BlocConsumer pattern explanation with BLoC
 
 ## 🔍 Code Walkthrough
 
@@ -594,14 +610,12 @@ Want to experiment? Try these:
 ## 📖 Learn More
 
 ### Documentation Files
-- **CLEAN_ARCHITECTURE_GUIDE.md** - Clean Architecture restructuring guide
-- **CLEAN_ARCHITECTURE_COMPLETE.md** - Complete Clean Architecture implementation
-- **ARCHITECTURE.md** - Flow diagrams for all three patterns
+- **ARCHITECTURE.md** - Flow diagrams for all four examples
 - **QUICK_REFERENCE.md** - Code snippets and common patterns
 - **CUBIT_GUIDE.md** - Deep dive into Cubit vs BLoC
 - **BLOC_CONSUMER_TUTORIAL.md** - Complete guide to BlocConsumer widget
 - **BLOCCONSUMER_IMPLEMENTATION_COMPLETE.md** - BlocConsumer implementation details
-- **EXERCISES.md** - Practice exercises for all three patterns
+- **EXERCISES.md** - Practice exercises for all patterns
 - **BEGINNERS_GUIDE.dart** - Step-by-step explanation
 - **TUTORIAL_OVERVIEW.md** - Complete package overview
 
@@ -620,7 +634,7 @@ Want to experiment? Try these:
 - ✓ Large applications with complex flows
 - ✓ Standard CRUD operations
 
-**Example**: User management, data loading, traditional list views
+**Examples**: User management, data loading, traditional list views (User feature)
 
 ### Use Cubit Pattern When:
 - ✓ Simple, straightforward state changes
@@ -630,29 +644,41 @@ Want to experiment? Try these:
 - ✓ Team prefers simplicity
 - ✓ Direct method calls feel more natural
 
-**Example**: Simple lists, settings screens, basic forms
+**Examples**: Simple lists, settings screens, basic forms (Post feature)
 
-### Use BlocConsumer Pattern When:
-- ✓ Need BOTH UI updates AND side effects
-- ✓ Show user feedback (snackbars, toasts, dialogs)
+### Use Cubit with BlocConsumer When:
+- ✓ Simple CRUD operations with user feedback
+- ✓ Need both UI updates AND side effects
+- ✓ Show user feedback (snackbars, toasts)
+- ✓ Want simpler code than BLoC (no events)
+- ✓ Basic interactive lists
+
+**Examples**: Todo lists, note apps, simple CRUD with confirmations (Todo feature)
+
+### Use BLoC with BlocConsumer When:
+- ✓ Complex interactions with side effects
+- ✓ Need event tracking AND user feedback
+- ✓ Shopping cart or checkout workflows
+- ✓ Multiple event types with rich UX
 - ✓ Navigate based on state changes
 - ✓ Trigger animations or haptic feedback
-- ✓ Shopping cart or checkout workflows
-- ✓ Form submissions with confirmation
 - ✓ Optimistic updates with rollback
 
-**Example**: Shopping carts, like/unlike buttons, add to favorites, complex forms
+**Examples**: Shopping carts, like/unlike buttons, add to favorites, complex forms (Product feature)
 
 ### Quick Decision Tree:
 ```
-Need side effects (snackbars, navigation)?
-├─ Yes → Use BlocConsumer
+Need side effects (snackbars, navigation, haptics)?
+├─ Yes
+│  ├─ Simple logic, no event tracking needed?
+│  │  └─ Use Cubit with BlocConsumer (Todo example)
+│  └─ Complex logic, need event tracking?
+│     └─ Use BLoC with BlocConsumer (Product example)
 └─ No
    ├─ Need event tracking or complex logic?
-   │  ├─ Yes → Use BLoC
-   │  └─ No → Use Cubit
+   │  └─ Use BLoC (User example)
    └─ Simple CRUD?
-      └─ Use Cubit
+      └─ Use Cubit (Post example)
 ```
 
 ## 🤝 Contributing
