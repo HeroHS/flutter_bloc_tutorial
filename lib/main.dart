@@ -5,14 +5,15 @@ import 'features/home/home_screen.dart';
 ///
 /// FLUTTER BLOC CLEAN ARCHITECTURE TUTORIAL
 ///
-/// This application demonstrates TWO state management patterns:
-/// ┌──────────────────┬─────────────────────────────────────────────┐
-/// │ Pattern          │ Example Feature                             │
-/// ├──────────────────┼─────────────────────────────────────────────┤
-/// │ BLoC (Events)    │ User Management (lib/features/user/)        │
-/// │ Cubit (Methods)  │ Post Management (lib/features/post/)        │
-/// │ BLoC (Events)    │ Product Management (lib/features/product/)  │
-/// └──────────────────┴─────────────────────────────────────────────┘
+/// This application demonstrates FOUR features with different patterns:
+/// ┌────────────────────────────┬─────────────────────────────────────┐
+/// │ Feature & Pattern          │ Location                            │
+/// ├────────────────────────────┼─────────────────────────────────────┤
+/// │ Posts (Cubit)              │ lib/features/post/                  │
+/// │ Users (BLoC)               │ lib/features/user/                  │
+/// │ Todos (Cubit + Consumer)   │ lib/features/todo/                  │
+/// │ Products (BLoC + Consumer) │ lib/features/product/               │
+/// └────────────────────────────┴─────────────────────────────────────┘
 ///
 /// CLEAN ARCHITECTURE LAYERS (applied to all features):
 ///
@@ -68,10 +69,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
         useMaterial3: true,
-        appBarTheme: const AppBarTheme(
-          centerTitle: true,
-          elevation: 0,
-        ),
+        appBarTheme: const AppBarTheme(centerTitle: true, elevation: 0),
       ),
       home: const HomeScreen(),
     );
